@@ -34,6 +34,14 @@ print('platform.architecture():\t\t{}'.format(platform.architecture()))
 NODATA = -9999.0
 
 
+# Set arcpy overwrite output to True
+arcpy.env.overwriteOutput = True
+print('\n\narcpy Environment variables:')
+environments = arcpy.ListEnvironments()
+for environment in environments:
+    print('\t{0:<30}:\t{1}'.format(environment, arcpy.env[environment]))
+
+
 # Define ArcSDE path
 # arcsde = r'Database Connections\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
 arcsde = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
@@ -58,6 +66,7 @@ if not arcpy.Exists(dataset=fgdb):
 
 
 # Define dictionary to hold CS ArcSDE feature classes and tables
+print('\n\nCreating data dictionary...')
 # BLKDATA = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.BLKDATA')
 # SCPTDATA = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.SCPTDATA')
 # COMPDATA = os.path.join(arcsde, r'CS2007_ADMIN.COMPDATA')
@@ -71,139 +80,165 @@ data_dictionary = {}
 # Add first level dictionary items
 data_dictionary['BLKDATA'] = {}
 data_dictionary['SCPTDATA'] = {}
+data_dictionary['COMPDATA'] = {}
 data_dictionary['POINTDATA'] = {}
+data_dictionary['PCOMPDATA'] = {}
 data_dictionary['LINEARDATA'] = {}
+data_dictionary['EVENTDATA'] = {}
+data_dictionary['SEVENTDATA'] = {}
 # Add second level dictionary item in_fc
-data_dictionary['BLKDATA']['in_fc'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.BLKDATA')
-data_dictionary['SCPTDATA']['in_fc'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.SCPTDATA')
-data_dictionary['POINTDATA']['in_fc'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.POINTDATA')
-data_dictionary['LINEARDATA']['in_fc'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.LINEARDATA')
+data_dictionary['BLKDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.BLKDATA')
+data_dictionary['BLKDATA']['type'] = 'feature_class'
+data_dictionary['SCPTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.SCPTDATA')
+data_dictionary['SCPTDATA']['type'] = 'feature_class'
+data_dictionary['COMPDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.COMPDATA')
+data_dictionary['COMPDATA']['type'] = 'table'
+data_dictionary['POINTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.POINTDATA')
+data_dictionary['POINTDATA']['type'] = 'feature_class'
+data_dictionary['PCOMPDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.PCOMPDATA')
+data_dictionary['PCOMPDATA']['type'] = 'table'
+data_dictionary['LINEARDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.LINEARDATA')
+data_dictionary['LINEARDATA']['type'] = 'feature_class'
+data_dictionary['EVENTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.EVENTDATA')
+data_dictionary['EVENTDATA']['type'] = 'table'
+data_dictionary['SEVENTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.EVENTDATA')
+data_dictionary['SEVENTDATA']['type'] = 'table'
 # Add second level dictionary items out_fc and guid_field (derived from second level dictionary item in_fc)
 for key in data_dictionary.keys():
     print(key)
-    out_fc = os.path.join(fgdb, os.path.basename(data_dictionary[key]['in_fc']).split(arcsde_user + '.', 1)[1])
-    data_dictionary[key]['out_fc'] = out_fc
-    guid_field = os.path.basename(data_dictionary[key]['in_fc']).split(arcsde_user + '.', 1)[1] + '_GUID'
+    out_fc = os.path.join(fgdb, os.path.basename(data_dictionary[key]['in_dataset']).split(arcsde_user + '.', 1)[1])
+    data_dictionary[key]['out_dataset'] = out_fc
+    guid_field = os.path.basename(data_dictionary[key]['in_dataset']).split(arcsde_user + '.', 1)[1] + '_GUID'
     data_dictionary[key]['guid_field'] = guid_field
 # Display dictionary
 for key in data_dictionary.keys():
     print(key)
     print('\t', data_dictionary[key])
-    print('\t\t', data_dictionary[key]['in_fc'])
-    print('\t\t', data_dictionary[key]['out_fc'])
+    print('\t\t', data_dictionary[key]['in_dataset'])
+    print('\t\t', data_dictionary[key]['out_dataset'])
     print('\t\t', data_dictionary[key]['guid_field'])
+print('Created data dictionary.')
 
 
-# Derive list of feature classes from dictionary
-feature_class_list = list(data_dictionary.keys())
+# Derive list of feature classes from the data dictionary
+# feature_class_list = list(data_dictionary.keys())
+feature_class_dictionary = {k:v for k, v in data_dictionary.items() if v['type'] == 'feature_class'}
+feature_class_list = list(feature_class_dictionary.keys())
 print('\n\nfeature_class_list:\t\t{}'.format(feature_class_list))
+feature_class_list.remove('BLKDATA')
+print('feature_class_list:\t\t{}'.format(feature_class_list))
 
 
-skip_copy_feature_classes = False
+# Derive list of tables from the data dictionary
+# feature_class_list = list(data_dictionary.keys())
+table_dictionary = {k:v for k, v in data_dictionary.items() if v['type'] == 'table'}
+table_list = list(table_dictionary.keys())
+print('\n\ntable_list:\t\t{}'.format(table_list))
 
 
-if not skip_copy_feature_classes:
-    # Copy CS ArcSDE feature classes to file geodatabase
+copy_feature_classes = True
+
+
+if copy_feature_classes:
+    # Copy CS ArcSDE feature classes to file geodatabase feature classes
     print('\n\nCopying feature classes...')
     for feature_class in feature_class_list:
-        print('\tin_feature_class:\t\t{}'.format(feature_class))
-        desc = arcpy.Describe(value=data_dictionary[feature_class]['in_fc'])
+        print('\tfeature_class:\t\t{}'.format(feature_class))
+        desc = arcpy.Describe(value=data_dictionary[feature_class]['in_dataset'])
         print('\t\tshapeType:\t\t{}'.format(desc.shapeType))
-        result = arcpy.GetCount_management(in_rows=data_dictionary[feature_class]['in_fc'])
+        result = arcpy.GetCount_management(in_rows=data_dictionary[feature_class]['in_dataset'])
         count = int(result.getOutput(0))
         print('\t\tcount:\t\t{}'.format(count))
-        print('\tout_feature_class:\t\t{}'.format(data_dictionary[feature_class]['out_fc']))
-        if arcpy.Exists(dataset=data_dictionary[feature_class]['out_fc']):
-            arcpy.Delete_management(in_data=data_dictionary[feature_class]['out_fc'],
+        print('\t\tout_feature_class:\t\t{}'.format(data_dictionary[feature_class]['out_dataset']))
+        if arcpy.Exists(dataset=data_dictionary[feature_class]['out_dataset']):
+            arcpy.Delete_management(in_data=data_dictionary[feature_class]['out_dataset'],
                                     data_type='')
-        arcpy.Copy_management(in_data=data_dictionary[feature_class]['in_fc'],
-                              out_data=data_dictionary[feature_class]['out_fc'],
+        arcpy.Copy_management(in_data=data_dictionary[feature_class]['in_dataset'],
+                              out_data=data_dictionary[feature_class]['out_dataset'],
                               data_type='')
     print('Copied feature classes.')
 
 
-sys.exit()
+copy_tables = True
 
 
-skip_add_guids = True
+if copy_tables:
+    # Copy CS ArcSDE tables to file geodatabase tables
+    print('\n\nCopying tables...')
+    for table in table_list:
+        print('\ttable:\t\t{}'.format(table))
+        desc = arcpy.Describe(value=data_dictionary[table]['in_dataset'])
+        if desc.hasOID:
+            print('\t\tOIDFieldName:\t\t{}'.format(desc.OIDFieldName))
+        result = arcpy.GetCount_management(in_rows=data_dictionary[table]['in_dataset'])
+        count = int(result.getOutput(0))
+        print('\t\tcount:\t\t{}'.format(count))
+        print('\t\tout_table:\t\t{}'.format(data_dictionary[table]['out_dataset']))
+        if arcpy.Exists(dataset=data_dictionary[table]['out_dataset']):
+            arcpy.Delete_management(in_data=data_dictionary[table]['out_dataset'],
+                                    data_type='')
+        arcpy.CopyRows_management(in_rows=data_dictionary[table]['in_dataset'],
+                                  out_table=data_dictionary[table]['out_dataset'],
+                                  config_keyword='')
+    print('Copied tables.')
 
 
-if not skip_add_guids:
+add_feature_class_guids = True
+
+
+if add_feature_class_guids:
     # Add GUID field to file geodatabase feature classes
     print('\n\nAdding GUID fields to feature classes...')
-    for in_feature_class in [BLKDATA, SCPTDATA, POINTDATA, LINEARDATA]:
+    for feature_class in feature_class_list:
         # for in_feature_class in [BLKDATA]:
-        print('\tin_feature_class:\t\t{}'.format(in_feature_class))
-        out_feature_class = os.path.basename(in_feature_class).split(arcsde_user + '.', 1)[1]
-        out_feature_class = os.path.join(fgdb, out_feature_class)
-        print('\tout_feature_class:\t\t{}'.format(out_feature_class))
+        print('\tfeature_class:\t\t{}'.format(feature_class))
+        print('\t\tout_feature_class:\t\t{}'.format(data_dictionary[feature_class]['out_dataset']))
 
-        guid_field_name = os.path.basename(in_feature_class).split(arcsde_user + '.', 1)[1] + '_GUID'
-        print('\tguid_field_name:\t\t{}'.format(guid_field_name))
-        field_list = arcpy.ListFields(dataset=in_feature_class,
-                                      wild_card=guid_field_name,
+        print('\t\tguid_field:\t\t{}'.format(data_dictionary[feature_class]['guid_field']))
+        field_list = arcpy.ListFields(dataset=data_dictionary[feature_class]['out_dataset'],
+                                      #wild_card=data_dictionary[feature_class]['guid_field'],
+                                      wild_card='*',
                                       field_type='All')
-        print('\tfield_list:\t\t{}'.format(field_list))
+        # print('\tfield_list:\t\t{}'.format(field_list))
         for field in field_list:
             print('\t\t{} is a {} field'.format(field.name, field.type))
-            if field.name == guid_field_name:
-                print('\tDeleting existing GUID field {}...'.format(guid_field_name))
-                arcpy.DeleteField_management(in_table=in_feature_class,
-                                             drop_field=list(guid_field_name))
-                print('\tDeleted existing GUID field {}.'.format(guid_field_name))
-        print('\tAdding GUID field {}...'.format(guid_field_name))
-        arcpy.AddField_management(in_table=out_feature_class,
-                                  field_name=guid_field_name,
+            if field.name == data_dictionary[feature_class]['guid_field']:
+                print('\tDeleting existing GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
+                arcpy.DeleteField_management(in_table=feature_class,
+                                             drop_field=list(data_dictionary[feature_class]['guid_field']))
+                print('\tDeleted existing GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
+        print('\tAdding GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
+        # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
+        # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
+        # See:  http://support.esri.com/technical-article/000010006
+        arcpy.AddField_management(in_table=data_dictionary[feature_class]['out_dataset'],
+                                  field_name=data_dictionary[feature_class]['guid_field'],
                                   field_type='GUID',
                                   field_precision='#',
                                   field_scale='#',
                                   field_length='#',
                                   field_alias='#',
-                                  field_is_nullable='NON_NULLABLE',
+                                  field_is_nullable='NULLABLE',
                                   field_is_required='REQUIRED',
                                   field_domain='#')
-        # arcpy.AddField_management("E:/CountrysideSurvey/esri-uk/guids/guids-20160712.gdb/SCPTDATA","SCPTDATA_GUID","GUID","#","#","#","#","NULLABLE","REQUIRED","#")
-        # arcpy.AddField_management("E:/CountrysideSurvey/esri-uk/guids/guids-20160712.gdb/POINTDATA","POINTDATA_GUID","GUID","#","#","#","#","NULLABLE","REQUIRED","#")
-        # arcpy.AddField_management("E:/CountrysideSurvey/esri-uk/guids/guids-20160712.gdb/LINEARDATA","LINEARDATA_GUID","GUID","#","#","#","#","NULLABLE","REQUIRED","#")
-        print('\tAdded GUID field {}.'.format(guid_field_name))
-        print('\tCalculating GUID field {}...'.format(guid_field_name))
+        print('\tAdded GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
+        print('\tCalculating GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
         code_block = '''def GUID():
             import uuid
             return \'{\' + str(uuid.uuid4()) + \'}\''''
-        arcpy.CalculateField_management(in_table=out_feature_class,
-                                        field=guid_field_name,
+        arcpy.CalculateField_management(in_table=data_dictionary[feature_class]['out_dataset'],
+                                        field=data_dictionary[feature_class]['guid_field'],
                                         expression='GUID()',
                                         expression_type='PYTHON',
                                         code_block=code_block)
-        print('\tCalculated GUID field {}.'.format(guid_field_name))
+        print('\tCalculated GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
     print('Added GUID fields to feature classes.')
     skip_copy_tables = False
 
 
-sys.exit()
 
 
-if not skip_copy_tables:
-    # Copy CS ArcSDE tables to file geodatabase
-    print('\n\nCopying tables...')
-    for in_table in [COMPDATA, PCOMPDATA, EVENTDATA, SEVENTDATA]:
-        print('\tin_table:\t\t{}'.format(in_table))
-        desc = arcpy.Describe(value=in_table)
-        if desc.hasOID:
-            print('\t\tOIDFieldName:\t\t{}'.format(desc.OIDFieldName))
-        result = arcpy.GetCount_management(in_rows=in_table)
-        count = int(result.getOutput(0))
-        print('\t\tcount:\t\t{}'.format(count))
-        out_table = os.path.basename(in_table).split(arcsde_user + '.', 1)[1]
-        out_table = os.path.join(fgdb, out_table)
-        print('\tout_table:\t\t{}'.format(out_table))
-        if arcpy.Exists(dataset=out_table):
-            arcpy.Delete_management(in_data=out_table,
-                                    data_type='')
-        arcpy.CopyRows_management(in_rows=in_table,
-                                  out_table=out_table,
-                                  config_keyword='')
-    print('Copied tables.')
+
 
 
 
