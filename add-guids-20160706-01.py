@@ -3,6 +3,7 @@ import sys
 import platform
 import datetime
 import time
+import random
 
 
 import arcpy
@@ -86,7 +87,7 @@ data_dictionary['PCOMPDATA'] = {}
 data_dictionary['LINEARDATA'] = {}
 data_dictionary['EVENTDATA'] = {}
 data_dictionary['SEVENTDATA'] = {}
-# Add second level dictionary item in_fc
+# Add second level dictionary items for feature classes and tables
 data_dictionary['BLKDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.BLKDATA')
 data_dictionary['BLKDATA']['type'] = 'feature_class'
 data_dictionary['SCPTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.ForesterData\CS2007_ADMIN.SCPTDATA')
@@ -103,20 +104,35 @@ data_dictionary['EVENTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN
 data_dictionary['EVENTDATA']['type'] = 'table'
 data_dictionary['SEVENTDATA']['in_dataset'] = os.path.join(arcsde, r'CS2007_ADMIN.SEVENTDATA')
 data_dictionary['SEVENTDATA']['type'] = 'table'
-# Add second level dictionary items out_fc and guid_field (derived from second level dictionary item in_fc)
+# Add second level dictionary item out feature class and table (derived from second level dictionary item in_fc)
 for key in data_dictionary.keys():
     print(key)
     out_fc = os.path.join(fgdb, os.path.basename(data_dictionary[key]['in_dataset']).split(arcsde_user + '.', 1)[1])
     data_dictionary[key]['out_dataset'] = out_fc
+# Add second level dictionary item guid field for feature classes (derived from second level dictionary item in_fc)
+for key in {k:v for k, v in data_dictionary.items() if v['type'] == 'feature_class'}:
+    print(key)
     guid_field = os.path.basename(data_dictionary[key]['in_dataset']).split(arcsde_user + '.', 1)[1] + '_GUID'
     data_dictionary[key]['guid_field'] = guid_field
+# Add second level dictionary item guid field for EVENTDATA table
+data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
+# Add second level dictionary items for tables
+data_dictionary['COMPDATA']['join_table'] = data_dictionary['SCPTDATA']['out_dataset']
+data_dictionary['COMPDATA']['join_field'] = 'SCPTDATA_ID'
+data_dictionary['PCOMPDATA']['join_table'] = data_dictionary['POINTDATA']['out_dataset']
+data_dictionary['PCOMPDATA']['join_field'] = 'POINTDATA_ID'
+data_dictionary['EVENTDATA']['join_table'] = data_dictionary['LINEARDATA']['out_dataset']
+data_dictionary['EVENTDATA']['join_field'] = 'LINEARDATA_ID'
+data_dictionary['SEVENTDATA']['join_table'] = data_dictionary['EVENTDATA']['out_dataset']
+data_dictionary['SEVENTDATA']['join_field'] = 'EVENTDATA_ID'
 # Display dictionary
-for key in data_dictionary.keys():
-    print(key)
-    print('\t', data_dictionary[key])
-    print('\t\t', data_dictionary[key]['in_dataset'])
-    print('\t\t', data_dictionary[key]['out_dataset'])
-    print('\t\t', data_dictionary[key]['guid_field'])
+print(data_dictionary)
+# for key in data_dictionary.keys():
+#     print(key)
+#     print('\t', data_dictionary[key])
+#     print('\t\t', data_dictionary[key]['in_dataset'])
+#     print('\t\t', data_dictionary[key]['out_dataset'])
+#     print('\t\t', data_dictionary[key]['guid_field'])
 print('Created data dictionary.')
 
 
@@ -237,73 +253,62 @@ add_table_guids = True
 
 
 if add_table_guids:
+    # Add GUID field to EVENTDATA table
+    print('\tAdding GUID field {}...'.format(data_dictionary['EVENTDATA']['guid_field']))
+    # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
+    # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
+    # See:  http://support.esri.com/technical-article/000010006
+    arcpy.AddField_management(in_table=data_dictionary['EVENTDATA']['out_dataset'],
+                              field_name=data_dictionary['EVENTDATA']['guid_field'],
+                              field_type='GUID',
+                              field_precision='#',
+                              field_scale='#',
+                              field_length='#',
+                              field_alias='#',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='REQUIRED',
+                              field_domain='#')
+    print('\tAdded GUID field {}.'.format(data_dictionary['EVENTDATA']['guid_field']))
+    print('\tCalculating GUID field {}...'.format(data_dictionary['EVENTDATA']['guid_field']))
+    code_block = '''def GUID():
+        import uuid
+        return \'{\' + str(uuid.uuid4()) + \'}\''''
+    arcpy.CalculateField_management(in_table=data_dictionary['EVENTDATA']['out_dataset'],
+                                    field=data_dictionary['EVENTDATA']['guid_field'],
+                                    expression='GUID()',
+                                    expression_type='PYTHON',
+                                    code_block=code_block)
+    print('\tCalculated GUID field {}.'.format(data_dictionary['EVENTDATA']['guid_field']))
     # Add GUID field to file geodatabase tables
     print('\n\nAdding GUID fields to tables...')
-
-    arcpy.JoinField_management(in_data=data_dictionary['PCOMPDATA']['out_dataset'],
-                               in_field='POINTDATA_ID',
-                               join_table=data_dictionary['POINTDATA']['out_dataset'],
-                               join_field='POINTDATA_ID',
-                               fields=['POINTDATA_GUID'])
-
-    arcpy.JoinField_management(in_data=data_dictionary['COMPDATA']['out_dataset'],
-                               in_field='SCPTDATA_ID',
-                               join_table=data_dictionary['SCPTDATA']['out_dataset'],
-                               join_field='SCPTDATA_ID',
-                               fields=['SCPTDATA_GUID'])
-
-    # for table in table_list:
-    #     print('\ttable:\t\t{}'.format(table))
-    #     print('\t\tout_table:\t\t{}'.format(data_dictionary[table]['out_dataset']))
-
-        # print('\t\tguid_field:\t\t{}'.format(data_dictionary[feature_class]['guid_field']))
-        # field_list = arcpy.ListFields(dataset=data_dictionary[feature_class]['out_dataset'],
-        #                               #wild_card=data_dictionary[feature_class]['guid_field'],
-        #                               wild_card='*',
-        #                               field_type='All')
-        # # print('\tfield_list:\t\t{}'.format(field_list))
-        # for field in field_list:
-        #     print('\t\t{} is a {} field'.format(field.name, field.type))
-        #     if field.name == data_dictionary[feature_class]['guid_field']:
-        #         print('\tDeleting existing GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
-        #         arcpy.DeleteField_management(in_table=feature_class,
-        #                                      drop_field=list(data_dictionary[feature_class]['guid_field']))
-        #         print('\tDeleted existing GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
-        # print('\tAdding GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
-        # # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
-        # # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
-        # # See:  http://support.esri.com/technical-article/000010006
-        # arcpy.AddField_management(in_table=data_dictionary[feature_class]['out_dataset'],
-        #                           field_name=data_dictionary[feature_class]['guid_field'],
-        #                           field_type='GUID',
-        #                           field_precision='#',
-        #                           field_scale='#',
-        #                           field_length='#',
-        #                           field_alias='#',
-        #                           field_is_nullable='NULLABLE',
-        #                           field_is_required='REQUIRED',
-        #                           field_domain='#')
-        # print('\tAdded GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
-        # print('\tCalculating GUID field {}...'.format(data_dictionary[feature_class]['guid_field']))
-        # code_block = '''def GUID():
-        #     import uuid
-        #     return \'{\' + str(uuid.uuid4()) + \'}\''''
-        # arcpy.CalculateField_management(in_table=data_dictionary[feature_class]['out_dataset'],
-        #                                 field=data_dictionary[feature_class]['guid_field'],
-        #                                 expression='GUID()',
-        #                                 expression_type='PYTHON',
-        #                                 code_block=code_block)
-        # print('\tCalculated GUID field {}.'.format(data_dictionary[feature_class]['guid_field']))
-    print('Added GUID fields to feature classes.')
+    for table in table_list:
+        print('\ttable:\t\t{}'.format(table))
+        print('\t\tin_data={}'.format(data_dictionary[table]['out_dataset']))
+        print('\t\tin_field={}'.format(data_dictionary[table]['join_field']))
+        print('\t\tjoin_table={}'.format(data_dictionary[table]['join_table']))
+        print('\t\tjoin_field={}'.format(data_dictionary[table]['join_field']))
+        thing = os.path.basename(data_dictionary[table]['join_table'])
+        print('\t\tthing={}'.format(thing))
+        print('\t\tfields={}'.format([data_dictionary[thing]['guid_field']]))
+        # arcpy.JoinField_management(in_data=data_dictionary[table]['out_dataset'],
+        #                            in_field=data_dictionary[table]['join_field'],
+        #                            join_table=data_dictionary[table]['join_table'],
+        #                            join_field=data_dictionary[table]['join_field'],
+        #                            fields=[data_dictionary[thing]['guid_field']])
+    print('Added GUID fields to tables.')
 
 
 
 
 
+print('\n' * 5, 'Hello World!', '\n' * 5)
 
 
 
 
+# See:  http://gis.stackexchange.com/questions/116274/select-random-rows-with-python-in-arcgis
+
+# table = data_dictionary['COMPDATA']['out_dataset']
 
 
 
