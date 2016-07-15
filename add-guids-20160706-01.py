@@ -56,6 +56,7 @@ print('\n\narcsde_user:\t\t{}'.format(arcsde_user))
 
 # Define file geodatabase
 fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160714.gdb'
 print('\n\nfgdb:\t\t\{}'.format(fgdb))
 
 
@@ -249,10 +250,10 @@ if add_feature_class_guids:
     print('Added GUID fields to feature classes.')
 
 
-add_table_guids = True
+add_related_table_guids = True
 
 
-if add_table_guids:
+if add_related_table_guids:
     # Add GUID field to EVENTDATA table
     print('\tAdding GUID field {}...'.format(data_dictionary['EVENTDATA']['guid_field']))
     # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
@@ -290,29 +291,57 @@ if add_table_guids:
         thing = os.path.basename(data_dictionary[table]['join_table'])
         print('\t\tthing={}'.format(thing))
         print('\t\tfields={}'.format([data_dictionary[thing]['guid_field']]))
-        # arcpy.JoinField_management(in_data=data_dictionary[table]['out_dataset'],
-        #                            in_field=data_dictionary[table]['join_field'],
-        #                            join_table=data_dictionary[table]['join_table'],
-        #                            join_field=data_dictionary[table]['join_field'],
-        #                            fields=[data_dictionary[thing]['guid_field']])
+        arcpy.JoinField_management(in_data=data_dictionary[table]['out_dataset'],
+                                   in_field=data_dictionary[table]['join_field'],
+                                   join_table=data_dictionary[table]['join_table'],
+                                   join_field=data_dictionary[table]['join_field'],
+                                   fields=[data_dictionary[thing]['guid_field']])
     print('Added GUID fields to tables.')
 
 
-
-
-
-print('\n' * 5, 'Hello World!', '\n' * 5)
-
-
+print('\n' * 5)
 
 
 # See:  http://gis.stackexchange.com/questions/116274/select-random-rows-with-python-in-arcgis
 
 # table = data_dictionary['COMPDATA']['out_dataset']
 
-
-
-
+fc = data_dictionary['POINTDATA']['out_dataset']
+object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=fc,
+                                                  field_names=['OID@'])]
+# print('object_ids:\t{}'.format(object_ids))
+sample_size = int(len(object_ids) / 100)
+print('\nlen(object_ids):\t{0}\nsample_size:\t{1}'.format(len(object_ids), sample_size))
+random_ids = random.sample(object_ids, sample_size)
+random_ids = sorted(random_ids, key=int, reverse=False)
+print('random_ids:\t{0}'.format(random_ids))
+oid_field = arcpy.Describe(fc).OIDFieldName
+print('oid_field:\t{0}'.format(oid_field))
+where_clause = '"{0}" IN ({1})'.format(oid_field, ','.join(map(str, random_ids)))
+print('where_clause:\t{}'.format(where_clause))
+# arcpy.MakeFeatureLayer_management(in_features=fc,
+#                                   out_layer='fc_layer',
+#                                   where_clause=where_clause)
+count = 0
+id_list = []
+with arcpy.da.SearchCursor(in_table=fc,
+                           field_names=['OID@', 'POINTDATA_ID', 'POINTDATA_GUID'],
+                           where_clause=where_clause) as cursor:
+    for row in cursor:
+        count += 1
+        print('\t{0:>4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
+        id_list.append(row[1])
+print('id_list:\t{}'.format(id_list))
+where_clause = '"{0}" IN ({1})'.format('POINTDATA_ID', ','.join(map(str, id_list)))
+print('where_clause:\t{}'.format(where_clause))
+rt = data_dictionary['PCOMPDATA']['out_dataset']
+count = 0
+with arcpy.da.SearchCursor(in_table=rt,
+                           field_names=['OID@', 'POINTDATA_ID', 'POINTDATA_GUID'],
+                           where_clause=where_clause) as cursor:
+    for row in cursor:
+        count += 1
+        print('\t{0:>4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
 
 
 
