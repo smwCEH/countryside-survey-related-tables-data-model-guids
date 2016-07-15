@@ -153,7 +153,7 @@ table_list = list(table_dictionary.keys())
 print('\n\ntable_list:\t\t{}'.format(table_list))
 
 
-copy_feature_classes = True
+copy_feature_classes = False
 
 
 if copy_feature_classes:
@@ -176,7 +176,7 @@ if copy_feature_classes:
     print('Copied feature classes.')
 
 
-copy_tables = True
+copy_tables = False
 
 
 if copy_tables:
@@ -200,7 +200,7 @@ if copy_tables:
     print('Copied tables.')
 
 
-add_feature_class_guids = True
+add_feature_class_guids = False
 
 
 if add_feature_class_guids:
@@ -250,7 +250,7 @@ if add_feature_class_guids:
     print('Added GUID fields to feature classes.')
 
 
-add_related_table_guids = True
+add_related_table_guids = False
 
 
 if add_related_table_guids:
@@ -326,10 +326,11 @@ count = 0
 id_list = []
 with arcpy.da.SearchCursor(in_table=fc,
                            field_names=['OID@', 'POINTDATA_ID', 'POINTDATA_GUID'],
-                           where_clause=where_clause) as cursor:
+                           where_clause=where_clause,
+                           sql_clause=(None, 'ORDER BY POINTDATA_ID, POINTDATA_GUID')) as cursor:
     for row in cursor:
         count += 1
-        print('\t{0:>4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
+        print('\t{0:<4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
         id_list.append(row[1])
 print('id_list:\t{}'.format(id_list))
 where_clause = '"{0}" IN ({1})'.format('POINTDATA_ID', ','.join(map(str, id_list)))
@@ -338,11 +339,11 @@ rt = data_dictionary['PCOMPDATA']['out_dataset']
 count = 0
 with arcpy.da.SearchCursor(in_table=rt,
                            field_names=['OID@', 'POINTDATA_ID', 'POINTDATA_GUID'],
-                           where_clause=where_clause) as cursor:
+                           where_clause=where_clause,
+                           sql_clause=(None, 'ORDER BY POINTDATA_ID, POINTDATA_GUID')) as cursor:
     for row in cursor:
         count += 1
-        print('\t{0:>4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
-
+        print('\t{0:<4}\t\t{1:>6}\t\t{2:>8}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
 
 
 
