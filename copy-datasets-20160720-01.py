@@ -165,6 +165,63 @@ if copy_datasets:
     print('Copied datasets.')
 
 
+list_fields = True
+
+
+if list_fields:
+    print('\n\nLisiting fields...')
+    # for dataset in data_dictionary.keys():
+    for dataset in ['POINTDATA', 'PCOMPDATA']:
+        print('\tdataset:\t\t{}'.format(dataset))
+        #
+        # Define input dataset
+        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):
+            dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
+        elif dataset in ('EVENTDATA'):
+            dataset_in = arcsde + '\\' + arcsde_user + '.' + dataset
+        else:
+            sys.exit('\n\ndataset {} not coded for!!!\n\n'.format(dataset))
+        #
+        # Define output dataset
+        dataset_out = os.path.join(fgdb, dataset)
+        print('\t\tdataset_out:\t\t{}'.format(dataset_out))
+        #
+        # List fields in dataset
+        print('\t\tListing fields...')
+        fields = arcpy.ListFields(dataset_out)
+        for field in fields:
+            print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                                                                           field.type,
+                                                                           field.length))
+        value = 'is' if field.isNullable else 'is not'
+        print('\t\t\t\t{0} {1} nullable'.format(field.name,
+                                                value))
+        print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
+                                                             field.domain))
+        value = 'is' if field.required else 'is not'
+        print('\t\t\t\t{0} {1} required'.format(field.name,
+                                                value))
+
+        print('\t\tListed fields.')
+
+
+
+
+
+
+
+# Capture end_time
+end_time = time.time()
+
+
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {} to execute this.'.format(hms_string(end_time - start_time)))
+print('\n\nDone.\n')
+
+
+sys.exit()
+
+
 add_guids = False
 
 
