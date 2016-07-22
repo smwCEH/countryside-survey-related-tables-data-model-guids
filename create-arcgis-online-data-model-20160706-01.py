@@ -62,9 +62,11 @@ print('\n\narcsde_fd:\t\t{}'.format(arcsde_fd))
 
 
 # Define file geodatabase
-fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 # fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160714.gdb'
 # fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160715.gdb'
+# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{}-with-nullable-fields.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{}-without-nullable-fields.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 print('\n\nfgdb:\t\t\{}'.format(fgdb))
 
 
@@ -78,21 +80,21 @@ if not arcpy.Exists(dataset=fgdb):
 # data_dictionary = {}
 data_dictionary = collections.OrderedDict()
 data_dictionary['SCPTDATA'] = {}
-data_dictionary['SCPTDATA']['id_field'] =         'SCPTDATA_ID'
-data_dictionary['SCPTDATA']['guid_field'] =       'SCPTDATA_GUID'
-data_dictionary['SCPTDATA']['related_table'] =    'COMPDATA'
+data_dictionary['SCPTDATA']['id_field'] = 'SCPTDATA_ID'
+data_dictionary['SCPTDATA']['guid_field'] = 'SCPTDATA_GUID'
+data_dictionary['SCPTDATA']['related_table'] = 'COMPDATA'
 data_dictionary['POINTDATA'] = {}
-data_dictionary['POINTDATA']['id_field'] =        'POINTDATA_ID'
-data_dictionary['POINTDATA']['guid_field'] =      'POINTDATA_GUID'
-data_dictionary['POINTDATA']['related_table'] =   'PCOMPDATA'
+data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
+data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
+data_dictionary['POINTDATA']['related_table'] = 'PCOMPDATA'
 data_dictionary['LINEARDATA'] = {}
-data_dictionary['LINEARDATA']['id_field'] =       'LINEARDATA_ID'
-data_dictionary['LINEARDATA']['guid_field'] =     'LINEARDATA_GUID'
-data_dictionary['LINEARDATA']['related_table'] =  'EVENTDATA'
+data_dictionary['LINEARDATA']['id_field'] = 'LINEARDATA_ID'
+data_dictionary['LINEARDATA']['guid_field'] = 'LINEARDATA_GUID'
+data_dictionary['LINEARDATA']['related_table'] = 'EVENTDATA'
 data_dictionary['EVENTDATA'] = {}
-data_dictionary['EVENTDATA']['id_field'] =        'EVENTDATA_ID'
-data_dictionary['EVENTDATA']['guid_field'] =      'EVENTDATA_GUID'
-data_dictionary['EVENTDATA']['related_table'] =   'SEVENTDATA'
+data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
+data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
+data_dictionary['EVENTDATA']['related_table'] = 'SEVENTDATA'
 
 
 
@@ -101,7 +103,7 @@ print(json.dumps(data_dictionary,
                  indent=4))
 
 
-copy_datasets = True
+copy_datasets = False
 
 
 if copy_datasets:
@@ -171,17 +173,18 @@ if copy_datasets:
                                               field_scale=field.scale,
                                               field_length=field.length,
                                               field_alias=field.aliasName,
-                                              field_is_nullable=field.isNullable,
+                                              field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
                                               field_is_required=field.required,
                                               field_domain=field.domain)
             del field, fields
             print('\t\tListed fields in out feature class and created in new feature class.')
             #
             # Append data from out dataset to new dataset
-            print('\t\tAppending rows from out feature class to new feature class...')
+            print('\t\tAppending rows from in feature class to out feature class...')
             arcpy.Append_management(inputs=[dataset_in],
                                     target=dataset_out,
                                     schema_type='TEST')
+            print('\t\tAppended rows from in feature class to out feature class.')
         #
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
@@ -241,22 +244,23 @@ if copy_datasets:
                                           field_scale=field.scale,
                                           field_length=field.length,
                                           field_alias=field.aliasName,
-                                          field_is_nullable=field.isNullable,
+                                          field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
                                           field_is_required=field.required,
                                           field_domain=field.domain)
         del field, fields
         print('\t\tListed fields in out feature class and created in new feature class.')
         #
         # Append data from out dataset to new dataset
-        print('\t\tAppending rows from out feature class to new feature class...')
+        print('\t\tAppending rows from in related table to out related table...')
         arcpy.Append_management(inputs=[related_table_in],
                                 target=related_table_out,
                                 schema_type='TEST')
-
+        print('\t\tAppended rows from in related table to out related table.')
+    #
     print('Copied datasets.')
 
 
-add_guids = True
+add_guids = False
 
 
 if add_guids:
@@ -285,7 +289,7 @@ if add_guids:
                                   field_scale='#',
                                   field_length='#',
                                   field_alias='#',
-                                  field_is_nullable='NULLABLE',
+                                  field_is_nullable='NULLABLE',  # field_is_nullable='NULLABLE',
                                   field_is_required='REQUIRED',
                                   field_domain='#')
         print('\t\tAdded GUID field {}.'.format(guid_field))
@@ -362,7 +366,7 @@ if add_guids:
     print('Added GUID fields to datasets.')
 
 
-create_relationship_classes = True
+create_relationship_classes = False
 
 
 if create_relationship_classes:
@@ -446,7 +450,7 @@ check_guids = True
 
 if check_guids:
     # Checking GUID fields in related file geodatabase datasets
-    print('\n' * 5, 'Checking GUID fields in related datasets...')
+    print('\n' * 5 + 'Checking GUID fields in related datasets...')
     #
     # Set sample size
     sample_size = 10
@@ -538,7 +542,7 @@ if check_guids:
         #
         time.sleep(1)
         #
-    print('\n\nChecked GUID fields in related datasets.', '\n' * 5)
+    print('\n\nChecked GUID fields in related datasets.' + '\n' * 5)
 
 
 # Capture end_time
