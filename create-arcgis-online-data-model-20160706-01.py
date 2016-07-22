@@ -300,6 +300,22 @@ if add_guids:
                                         code_block=code_block)
         print('\t\tCalculated GUID field {}.'.format(guid_field))
         #
+        # Add attribute index to newly added GUID field
+        print('\t\tAdding attribute index to GUID field {}...'.format(guid_field))
+        index_name = guid_field + '_IDX'
+        if len(arcpy.ListIndexes(dataset=dataset_out,
+                                 wild_card=index_name)) > 0:
+            print('\t\t\tDeleting attribute index {}...'.format(index_name))
+            arcpy.RemoveIndex_management(in_table=dataset_out,
+                                         index_name=index_name)
+            print('\t\t\tDeleted attribute index {}.'.format(index_name))
+        arcpy.AddIndex_management(in_table=dataset_out,
+                                  fields=guid_field,
+                                  index_name=index_name,
+                                  unique='UNIQUE',
+                                  ascending='NON_ASCENDING')
+        print('\t\tAdded attribute index to GUID field {}.'.format(guid_field))
+        #
         # Join GUIDs to related table
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
@@ -326,14 +342,32 @@ if add_guids:
                                    join_field=id_field,
                                    fields=[guid_field])
         print('\t\t\tAdded GUID fields to related tables.')
-
+        #
+        # Add attribute index to newly joined GUID field
+        print('\t\t\tAdding attribute index to GUID field {}...'.format(guid_field))
+        index_name = guid_field + '_IDX'
+        if len(arcpy.ListIndexes(dataset=related_table_out,
+                                 wild_card=index_name)) > 0:
+            print('\t\t\t\tDeleting attribute index {}...'.format(index_name))
+            arcpy.RemoveIndex_management(in_table=related_table_out,
+                                         index_name=index_name)
+            print('\t\t\t\tDeleted attribute index {}.'.format(index_name))
+        arcpy.AddIndex_management(in_table=related_table_out,
+                                  fields=guid_field,
+                                  index_name=index_name,
+                                  unique='UNIQUE',
+                                  ascending='NON_ASCENDING')
+        print('\t\t\tAdded attribute index to GUID field {}.'.format(guid_field))
+    #
     print('Added GUID fields to datasets.')
 
 
-# TODO - arcpy.AddIndex_management()
+# TODO - arcpy.CreateRelationshipClass_management()
 
 
-sys.exit()
+
+
+
 
 
 print('\n' * 5)
@@ -345,6 +379,10 @@ check_guids = True
 if check_guids:
     # Checking GUID fields in related file geodatabase datasets
     print('\n\nChecking GUID fields in related datasets...')
+    #
+    # Set sample size
+    sample_size = 10
+    #
     for dataset in data_dictionary.keys():
     # for dataset in ['SCPTDATA']:
         print('\tdataset:\t\t{}'.format(dataset))
@@ -370,8 +408,6 @@ if check_guids:
         object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=dataset_out,
                                                           field_names=['OID@'])]
         # print('object_ids:\t{}'.format(object_ids))
-        # sample_size = int(len(object_ids) / 100)
-        sample_size = 100
         print('\t\tlen(object_ids):\t{0}\n\t\tsample_size:\t{1}'.format(len(object_ids), sample_size))
         random_ids = random.sample(object_ids, sample_size)
         random_ids = sorted(random_ids, key=int, reverse=False)
@@ -436,9 +472,6 @@ if check_guids:
         #
     print('\n\nChecked GUID fields in related datasets.')
 
-
-
-# TODO - arcpy.CreateRelationshipClass_management()
 
 
 # Capture end_time
