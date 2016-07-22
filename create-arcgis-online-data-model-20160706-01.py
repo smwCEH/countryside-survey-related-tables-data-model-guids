@@ -101,7 +101,7 @@ print(json.dumps(data_dictionary,
                  indent=4))
 
 
-copy_datasets = False
+copy_datasets = True
 
 
 if copy_datasets:
@@ -256,7 +256,7 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-add_guids = False
+add_guids = True
 
 
 if add_guids:
@@ -362,15 +362,83 @@ if add_guids:
     print('Added GUID fields to datasets.')
 
 
-# TODO - arcpy.CreateRelationshipClass_management()
+create_relationship_classes = True
 
 
-
-
-
-
-
-print('\n' * 5)
+if create_relationship_classes:
+    # Add relationship classes
+    print('\n\nCreating relationship classes...')
+    for dataset in data_dictionary.keys():
+        print('\tdataset:\t\t{}'.format(dataset))
+        #
+        # Define output dataset
+        dataset_out = os.path.join(fgdb, dataset)
+        print('\t\tdataset_out:\t\t{}'.format(dataset_out))
+        #
+        # Get related table from data dictionary
+        related_table = data_dictionary[dataset]['related_table']
+        # print('\t\trelated_table:\t\t{}'.format(related_table))
+        #
+        # Get related table from data dictionary
+        guid_field = data_dictionary[dataset]['guid_field']
+        print('\t\tguid_field:\t\t{}'.format(guid_field))
+        #
+        # Define output related table path
+        related_table_out = os.path.join(fgdb, related_table)
+        print('\t\trelated_table_out:\t\t{}'.format(related_table_out))
+        #
+        #  Create relationship class
+        print('\t\tCreating relationship class...')
+        print('\t\t\torigin_table:\t\t\t\t{}'.format(dataset_out))
+        print('\t\t\tdestination_table:\t\t\t{}'.format(related_table_out))
+        out_relationship_class = os.path.basename(dataset_out) + '_' + os.path.basename(related_table_out)
+        print('\t\t\tout_relationship_class:\t\t{}'.format(out_relationship_class))
+        relationship_type = 'COMPOSITE'
+        print('\t\t\trelationship_type:\t\t\t{}'.format(relationship_type))
+        forward_label = os.path.basename(dataset_out)
+        print('\t\t\tforward_label:\t\t\t\t{}'.format(forward_label))
+        backward_label = os.path.basename(related_table_out)
+        print('\t\t\tbackward_label:\t\t\t\t{}'.format(backward_label))
+        message_direction = 'FORWARD'
+        print('\t\t\tmessage_direction:\t\t\t{}'.format(message_direction))
+        cardinality = 'ONE_TO_MANY'
+        print('\t\t\tcardinality:\t\t\t\t{}'.format(cardinality))
+        attributed = 'NONE'
+        print('\t\t\tattributed:\t\t\t\t\t{}'.format(attributed))
+        origin_primary_key = guid_field
+        print('\t\t\torigin_primary_key:\t\t\t{}'.format(origin_primary_key))
+        origin_foreign_key = ''
+        print('\t\t\torigin_foreign_key:\t\t\t{}'.format(origin_foreign_key))
+        destination_primary_key = guid_field
+        print('\t\t\tdestination_primary_key:\t{}'.format(destination_primary_key))
+        destination_foreign_key = ''
+        print('\t\t\tdestination_foreign_key:\t{}'.format(destination_foreign_key))
+        # desc = arcpy.Describe(value=os.path.join(fgdb, out_relationship_class))
+        # print('desc.name:\t\t{}'.format(desc.name))
+        # if hasattr(desc, 'name'):
+        #     print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
+        #     arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
+        #     print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
+        if arcpy.Exists(dataset=os.path.join(fgdb, out_relationship_class)):
+            print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
+            arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
+            print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
+        arcpy.CreateRelationshipClass_management(origin_table=dataset_out,
+                                                 destination_table=related_table_out,
+                                                 out_relationship_class=out_relationship_class,
+                                                 relationship_type=relationship_type,
+                                                 forward_label=forward_label,
+                                                 backward_label=backward_label,
+                                                 message_direction=message_direction,
+                                                 cardinality=cardinality,
+                                                 attributed=attributed,
+                                                 origin_primary_key=origin_primary_key,
+                                                 origin_foreign_key=origin_foreign_key,
+                                                 destination_primary_key=destination_primary_key,
+                                                 destination_foreign_key=destination_foreign_key)
+        print('\t\tCreating relationship class...')
+    #
+    print('Creating relationship classes...')
 
 
 check_guids = True
@@ -378,7 +446,7 @@ check_guids = True
 
 if check_guids:
     # Checking GUID fields in related file geodatabase datasets
-    print('\n\nChecking GUID fields in related datasets...')
+    print('\n' * 5, 'Checking GUID fields in related datasets...')
     #
     # Set sample size
     sample_size = 10
@@ -470,8 +538,7 @@ if check_guids:
         #
         time.sleep(1)
         #
-    print('\n\nChecked GUID fields in related datasets.')
-
+    print('\n\nChecked GUID fields in related datasets.', '\n' * 5)
 
 
 # Capture end_time
