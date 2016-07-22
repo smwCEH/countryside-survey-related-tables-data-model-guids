@@ -101,7 +101,7 @@ print(json.dumps(data_dictionary,
                  indent=4))
 
 
-copy_datasets = False
+copy_datasets = True
 
 
 if copy_datasets:
@@ -111,12 +111,7 @@ if copy_datasets:
         print('\tdataset:\t\t{}'.format(dataset))
         #
         # Define input dataset
-        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
-        elif dataset in ('EVENTDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user +'.' + dataset
-        else:
-            sys.exit('\n\ndataset {} not coded for!!!\n\n'.format(dataset))
+        dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
         #
         # Define output dataset
         dataset_out = os.path.join(fgdb, dataset)
@@ -165,49 +160,287 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-list_fields = True
+create_new_datasets = True
 
 
-if list_fields:
-    print('\n\nLisiting fields...')
-    # for dataset in data_dictionary.keys():
-    for dataset in ['POINTDATA', 'PCOMPDATA']:
+if create_new_datasets:
+    print('\n\nCreating new datasets...')
+    for dataset in data_dictionary.keys():
         print('\tdataset:\t\t{}'.format(dataset))
         #
-        # Define input dataset
-        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
-        elif dataset in ('EVENTDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user + '.' + dataset
-        else:
-            sys.exit('\n\ndataset {} not coded for!!!\n\n'.format(dataset))
-        #
-        # Define output dataset
+        # Define out dataset
         dataset_out = os.path.join(fgdb, dataset)
         print('\t\tdataset_out:\t\t{}'.format(dataset_out))
         #
-        # List fields in dataset
-        print('\t\tListing fields...')
-        fields = arcpy.ListFields(dataset_out)
+        # Define new dataset
+        dataset_new = os.path.join(fgdb, dataset + '_new')
+        print('\t\tdataset_new:\t\t{}'.format(dataset_new))
+        #
+        # Create new dataset
+        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Only create feature classes as EVENTDATA related table will be copied as the related table of the LINEARDATA feature class
+            if arcpy.Exists(dataset_new):
+                arcpy.Delete_management(dataset_new)
+            desc = arcpy.Describe(dataset_out)
+            dataType = desc.dataType
+            print('\t\t\tdataType:\t\t{}'.format(dataType))
+            shapeType = desc.shapeType
+            print('\t\t\tshapeType:\t\t{}'.format(shapeType))
+            arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_new),
+                                                out_name=os.path.basename(dataset_new),
+                                                geometry_type=shapeType,
+                                                spatial_reference=arcpy.SpatialReference(27700))
+            #
+            # List fields in dataset_out and create fields in dataset_new
+            print('\t\tListing fields in out feature class and creating in new feature class...')
+            fields = arcpy.ListFields(dataset_out)
+            for field in fields:
+                if field.name not in ['OBJECTID', 'SHAPE']:
+                    # print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                    #                                                                field.type,
+                    #                                                                field.length))
+                    # print('\t\t\t\t{0} {1} nullable'.format(field.name,
+                    #                                         'is' if field.isNullable else 'is not'))
+                    # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
+                    #                                                      field.domain))
+                    # print('\t\t\t\t{0} {1} required'.format(field.name,
+                    #                                         'is' if field.required else 'is not'))
+                    arcpy.AddField_management(in_table=dataset_new,
+                                              field_name=field.name,
+                                              field_type=field.type,
+                                              field_precision=field.precision,
+                                              field_scale=field.scale,
+                                              field_length=field.length,
+                                              field_alias=field.aliasName,
+                                              field_is_nullable=field.isNullable,
+                                              field_is_required=field.required,
+                                              field_domain=field.domain)
+            print('\t\tListed fields in out feature class and created in new feature class.')
+            #
+            # Append data from out dataset to new dataset
+            print('\t\tAppending rows from out feature class to new feature class...')
+            arcpy.Append_management(inputs=[dataset_out],
+                                    target=dataset_new,
+                                    schema_type='TEST')
+            print('\t\tAppended rows from out feature class to new feature class.')
+            # Add GUIDs
+            # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
+            # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
+            # See:  http://support.esri.com/technical-article/000010006
+            print('\t\tAdding GUID to new dataset...')
+            guid_field = data_dictionary[dataset]['guid_field']
+            print('\t\t\tguid_field:\t\t{}'.format(guid_field))
+            arcpy.AddField_management(in_table=dataset_new,
+                                      field_name=guid_field,
+                                      field_type='GUID',
+                                      field_precision='#',
+                                      field_scale='#',
+                                      field_length='#',
+                                      field_alias='#',
+                                      field_is_nullable='NULLABLE',
+                                      field_is_required='REQUIRED',
+                                      field_domain='#')
+            print('\t\tAdded GUID field {}.'.format(guid_field))
+            print('\t\tCalculating GUID field {}...'.format(guid_field))
+            code_block = '''def GUID():
+                import uuid
+                return \'{\' + str(uuid.uuid4()) + \'}\''''
+            arcpy.CalculateField_management(in_table=dataset_new,
+                                            field=guid_field,
+                                            expression='GUID()',
+                                            expression_type='PYTHON',
+                                            code_block=code_block)
+            print('\t\tCalculated GUID field {}.'.format(guid_field))
+
+        #
+        # Copy related table
+        # Get related table from data dictionary
+        related_table = data_dictionary[dataset]['related_table']
+        print('\t\trelated_table:\t\t{}'.format(related_table))
+        #
+        #  Define output related table
+        related_table_out = os.path.join(fgdb, related_table)
+        related_table_new = os.path.join(fgdb, related_table + '_new')
+        #
+        # Display input and output related table paths
+        print('\t\t\trelated_table_new:\t\t{}'.format(related_table_new))
+        if arcpy.Exists(related_table_new):
+            arcpy.Delete_management(related_table_new)
+        desc = arcpy.Describe(related_table_out)
+        dataType = desc.dataType
+        print('\t\t\tdataType:\t\t{}'.format(dataType))
+        arcpy.CreateTable_management(out_path=os.path.dirname(related_table_new),
+                                         out_name=os.path.basename(related_table_new))
+        #
+        # List fields in related table and create fields in related table new
+        print('\t\tListing fields in out related table and creating in new related table...')
+        fields = arcpy.ListFields(related_table_out)
         for field in fields:
-            print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-                                                                           field.type,
-                                                                           field.length))
-        value = 'is' if field.isNullable else 'is not'
-        print('\t\t\t\t{0} {1} nullable'.format(field.name,
-                                                value))
-        print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
-                                                             field.domain))
-        value = 'is' if field.required else 'is not'
-        print('\t\t\t\t{0} {1} required'.format(field.name,
-                                                value))
+            if field.name not in ['OBJECTID', 'SHAPE']:
+                # print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                #                                                                field.type,
+                #                                                                field.length))
+                # print('\t\t\t\t{0} {1} nullable'.format(field.name,
+                #                                         'is' if field.isNullable else 'is not'))
+                # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
+                #                                                      field.domain))
+                # print('\t\t\t\t{0} {1} required'.format(field.name,
+                #                                         'is' if field.required else 'is not'))
+                arcpy.AddField_management(in_table=dataset_new,
+                                          field_name=field.name,
+                                          field_type=field.type,
+                                          field_precision=field.precision,
+                                          field_scale=field.scale,
+                                          field_length=field.length,
+                                          field_alias=field.aliasName,
+                                          field_is_nullable=field.isNullable,
+                                          field_is_required=field.required,
+                                          field_domain=field.domain)
+        print('\t\tListed fields in out related table and created in new related table.')
+        #
+        # Append data from out dataset to new dataset
+        print('\t\tAppending rows from out related table to new related table...')
+        arcpy.Append_management(inputs=[related_table_out],
+                                target=related_table_new,
+                                schema_type='TEST')
+        print('\t\tAppended rows from out related table to new related table.')
+        #
+        #
+        # Join GUIDs to related table
+        # Get related table from data dictionary
+        print('\t\tAdding GUID to related table...')
+        related_table = data_dictionary[dataset]['related_table']
+        print('\t\t\trelated_table:\t\t{}'.format(related_table))
+        #
+        # Get ID field from data dictionary
+        id_field = data_dictionary[dataset]['id_field']
+        print('\t\t\tid_field:\t\t{}'.format(id_field))
+        #
+        # Add GUID field to file geodatabase tables
+        print('\t\t\tin_data={}'.format(related_table_new))
+        print('\t\t\tin_field={}'.format(id_field))
+        print('\t\t\tjoin_table={}'.format(dataset_new))
+        print('\t\t\tjoin_field={}'.format(id_field))
+        print('\t\t\tfields={}'.format([guid_field]))
+        arcpy.JoinField_management(in_data=related_table_new,
+                                   in_field=id_field,
+                                   join_table=dataset_new,
+                                   join_field=id_field,
+                                   fields=[guid_field])
+        print('\t\tAdded GUID to related table.')
+    #
+    print('Created new datasets.')
 
-        print('\t\tListed fields.')
+
+sys.exit()
+
+
+check_guids = True
+
+
+if check_guids:
+    # Checking GUID fields in related file geodatabase datasets
+    print('\n\nChecking GUID fields in related datasets...')
+    for dataset in data_dictionary.keys():
+    # for dataset in ['SCPTDATA']:
+        print('\tdataset:\t\t{}'.format(dataset))
+        #
+        # Define output dataset
+        dataset_new = os.path.join(fgdb, dataset + '_new')
+        print('\t\tdataset_new:\t\t{}'.format(dataset_new))
+        #
+        # Get ID field name from data dictionary
+        id_field = data_dictionary[dataset]['id_field']
+        print('\t\tid_field:\t\t\t{}'.format(id_field))
+        #
+        # Get GUID field name from data dictionary
+        guid_field = data_dictionary[dataset]['guid_field']
+        print('\t\tguid_field:\t\t\t{}'.format(guid_field))
+        #
+        # Get related table from data dictinary
+        related_table = data_dictionary[dataset]['related_table']
+        related_table = os.path.join(fgdb, related_table + '_new')
+        print('\t\trelated_table:\t\t{}'.format(related_table))
+        #
+        # Get GUIDS from file geodatabase dataset
+        # object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=dataset_new,
+        #                                                   field_names=['OID@'])]
+        object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=dataset_new,
+                                                          field_names=['OBJECTID'])]
+  # print('object_ids:\t{}'.format(object_ids))
+        # sample_size = int(len(object_ids) / 100)
+        sample_size = 100
+        print('\t\tlen(object_ids):\t{0}\n\t\tsample_size:\t\t{1}'.format(len(object_ids), sample_size))
+        random_ids = random.sample(object_ids, sample_size)
+        random_ids = sorted(random_ids, key=int, reverse=False)
+        # print('\t\trandom_ids:\t{0}'.format(random_ids))
+        oid_field = arcpy.Describe(dataset_new).OIDFieldName
+        # print('\t\toid_field:\t{0}'.format(oid_field))
+        where_clause = '"{0}" IN ({1})'.format(oid_field, ','.join(map(str, random_ids)))
+        # print('\t\twhere_clause:\t{}'.format(where_clause))
+        # rows = [row for row in arcpy.da.SearchCursor(in_table=dataset_new,
+        #                                              field_names=['OID@', id_field, guid_field],
+        #                                              where_clause=where_clause,
+        #                                              sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
+        rows = [row for row in arcpy.da.SearchCursor(in_table=dataset_new,
+                                                     field_names=['OBJECTID', id_field, guid_field],
+                                                     where_clause=where_clause,
+                                                     sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
+        row_count = len(rows)
+        del rows
+        print('\t\trow_count:\t\t{}'.format(row_count))
+        if row_count != sample_size:
+            sys.exit('\n\nrow count != sample_size!!!\n\n')
+        count = 0
+        sample_list = []
+        with arcpy.da.SearchCursor(in_table=dataset_new,
+                                   field_names=['OID@', id_field, guid_field],
+                                   where_clause=where_clause,
+                                   sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
+            for row in cursor:
+                count += 1
+                print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
+                sample_list.append([row[0], row[1], row[2]])
+        # print('\t\tsample_list:\t{}'.format(sample_list))
+        for sample in sample_list:
+            # print(sample)
+            print('\t\tid:\t\t\t{}'.format(sample[1]))
+            print('\t\tguid:\t\t{}'.format(sample[2]))
+            where_clause = '"{0}" = ({1})'.format(id_field, sample[1])
+            # print('\t\twhere_clause:\t{}'.format(where_clause))
+            count = 0
+            rows = [row for row in arcpy.da.SearchCursor(in_table=related_table,
+                                                         field_names=['OID@', id_field, guid_field],
+                                                         where_clause=where_clause,
+                                                         sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
+            row_count = len(rows)
+            print('\t\trow_count:\t\t{}'.format(row_count))
+            del rows
+            with arcpy.da.SearchCursor(in_table=related_table,
+                                       field_names=['OID@', id_field, guid_field],
+                                       where_clause=where_clause,
+                                       sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
+                for row in cursor:
+                    count += 1
+                    print('\t\trow:\t\t{}'.format(row))
+                    print('\t\trow[2]:\t\t{}'.format(row[2]))
+                    print('\t\tsample[2]:\t{}'.format(sample[2]))
+                    if row[2] == sample[2]:
+                        compare = 'Yes'
+                    else:
+                        compare = 'No'
+                    print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}\t\t{4:>3}'.format(count, row[0], row[1], row[2], compare))
+            if count != row_count:
+                sys.exit('\n\ncount != row_count!!!\n\n')
+    #
+    print('\n\nChecked GUID fields in related datasets.')
 
 
 
+# TODO - arcpy.AddIndex_management()
 
 
+
+# TODO - arcpy.CreateRelationshipClass_management()
 
 
 # Capture end_time
