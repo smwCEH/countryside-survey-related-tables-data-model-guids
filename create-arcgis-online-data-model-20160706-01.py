@@ -101,7 +101,7 @@ print(json.dumps(data_dictionary,
                  indent=4))
 
 
-copy_datasets = True
+copy_datasets = False
 
 
 if copy_datasets:
@@ -125,7 +125,7 @@ if copy_datasets:
         print('\t\tdataset_in:\t\t{}'.format(dataset_in))
         print('\t\tdataset_out:\t\t{}'.format(dataset_out))
         #
-        # Copy dataset
+        # Create new feature class
         if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Only copy feature classes as EVENTDATA related table will be copied as the related table of the LINEARDATA feature class
             #
             #  Delete out dataset if it already exists
@@ -133,12 +133,56 @@ if copy_datasets:
                 arcpy.Delete_management(in_data=dataset_out,
                                         data_type='')
             #
-            # Copy dataset
-            arcpy.Copy_management(in_data=dataset_in,
-                                  out_data=dataset_out,
-                                  data_type='')
+            # Create empty feature class
+            desc = arcpy.Describe(dataset_in)
+            dataType = desc.dataType
+            print('\t\t\tdataType:\t\t{}'.format(dataType))
+            shapeType = desc.shapeType
+            print('\t\t\tshapeType:\t\t{}'.format(shapeType))
+            arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
+                                                out_name=os.path.basename(dataset_out),
+                                                geometry_type=shapeType,
+                                                spatial_reference=arcpy.SpatialReference(27700))
+            fields = arcpy.ListFields(dataset_out)
+            # for field in fields:
+            #     print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+            #                                                                    field.type,
+            #                                                                    field.length))
+            # del field, fields
+            #
+            # List fields in dataset_in and create fields in dataset_out
+            print('\t\tListing fields in out feature class and creating in new feature class...')
+            fields = arcpy.ListFields(dataset_in)
+            for field in fields:
+                if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN']:
+                    print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                                                                                   field.type,
+                                                                                   field.length))
+                    # print('\t\t\t\t{0} {1} nullable'.format(field.name,
+                    #                                         'is' if field.isNullable else 'is not'))
+                    # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
+                    #                                                      field.domain))
+                    # print('\t\t\t\t{0} {1} required'.format(field.name,
+                    #                                         'is' if field.required else 'is not'))
+                    arcpy.AddField_management(in_table=dataset_out,
+                                              field_name=field.name,
+                                              field_type=field.type,
+                                              field_precision=field.precision,
+                                              field_scale=field.scale,
+                                              field_length=field.length,
+                                              field_alias=field.aliasName,
+                                              field_is_nullable=field.isNullable,
+                                              field_is_required=field.required,
+                                              field_domain=field.domain)
+            del field, fields
+            print('\t\tListed fields in out feature class and created in new feature class.')
+            #
+            # Append data from out dataset to new dataset
+            print('\t\tAppending rows from out feature class to new feature class...')
+            arcpy.Append_management(inputs=[dataset_in],
+                                    target=dataset_out,
+                                    schema_type='TEST')
         #
-        # Copy related table
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
         print('\t\trelated_table:\t\t{}'.format(related_table))
@@ -157,15 +201,62 @@ if copy_datasets:
         if arcpy.Exists(related_table_out):
             arcpy.Delete_management(in_data=related_table_out,
                                     data_type='')
+        # #
+        # # Copy related table
+        # arcpy.Copy_management(in_data=related_table_in,
+        #                       out_data=related_table_out,
+        #                       data_type='')
         #
-        # Copy related table
-        arcpy.Copy_management(in_data=related_table_in,
-                              out_data=related_table_out,
-                              data_type='')
+        # Create empty table
+        desc = arcpy.Describe(related_table_in)
+        dataType = desc.dataType
+        print('\t\t\tdataType:\t\t{}'.format(dataType))
+        arcpy.CreateTable_management(out_path=os.path.dirname(related_table_out),
+                                     out_name=os.path.basename(related_table_out))
+        # fields = arcpy.ListFields(related_table_out)
+        # for field in fields:
+        #     print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+        #                                                                    field.type,
+        #                                                                    field.length))
+        # del field, fields
+        #
+        # List fields in dataset_in and create fields in dataset_out
+        print('\t\tListing fields in out feature class and creating in new feature class...')
+        fields = arcpy.ListFields(related_table_in)
+        for field in fields:
+            if field.name not in ['OBJECTID']:
+                print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                                                                               field.type,
+                                                                               field.length))
+                # print('\t\t\t\t{0} {1} nullable'.format(field.name,
+                #                                         'is' if field.isNullable else 'is not'))
+                # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
+                #                                                      field.domain))
+                # print('\t\t\t\t{0} {1} required'.format(field.name,
+                #                                         'is' if field.required else 'is not'))
+                arcpy.AddField_management(in_table=related_table_out,
+                                          field_name=field.name,
+                                          field_type=field.type,
+                                          field_precision=field.precision,
+                                          field_scale=field.scale,
+                                          field_length=field.length,
+                                          field_alias=field.aliasName,
+                                          field_is_nullable=field.isNullable,
+                                          field_is_required=field.required,
+                                          field_domain=field.domain)
+        del field, fields
+        print('\t\tListed fields in out feature class and created in new feature class.')
+        #
+        # Append data from out dataset to new dataset
+        print('\t\tAppending rows from out feature class to new feature class...')
+        arcpy.Append_management(inputs=[related_table_in],
+                                target=related_table_out,
+                                schema_type='TEST')
+
     print('Copied datasets.')
 
 
-add_guids = True
+add_guids = False
 
 
 if add_guids:
@@ -240,6 +331,9 @@ if add_guids:
 
 
 # TODO - arcpy.AddIndex_management()
+
+
+sys.exit()
 
 
 print('\n' * 5)
