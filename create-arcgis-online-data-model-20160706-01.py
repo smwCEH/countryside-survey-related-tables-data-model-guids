@@ -103,12 +103,64 @@ print(json.dumps(data_dictionary,
                  indent=4))
 
 
-copy_datasets = False
+copy_datasets = True
 
 
 if copy_datasets:
     # Copy CS ArcSDE datasets to file geodatabase datasets
     print('\n\nCopying datasets...')
+    #
+    # Copy the BLKDATA feature class
+    # Define input_dataset
+    dataset = r'BLKDATA'
+    dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
+    #Define output dataset
+    dataset_out = os.path.join(fgdb, dataset)
+    #  Display input and output dataset paths
+    print('\t\tdataset_in:\t\t{}'.format(dataset_in))
+    print('\t\tdataset_out:\t\t{}'.format(dataset_out))
+    # Delete out dataset if it already exists
+    if arcpy.Exists(dataset_out):
+        arcpy.Delete_management(in_data=dataset_out,
+                                data_type='')
+    # Create empty feature class
+    desc = arcpy.Describe(dataset_in)
+    dataType = desc.dataType
+    print('\t\t\tdataType:\t\t{}'.format(dataType))
+    shapeType = desc.shapeType
+    print('\t\t\tshapeType:\t\t{}'.format(shapeType))
+    arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
+                                        out_name=os.path.basename(dataset_out),
+                                        geometry_type=shapeType,
+                                        spatial_reference=arcpy.SpatialReference(27700))
+    fields = arcpy.ListFields(dataset_out)
+    print('\t\tListing fields in out feature class and creating in new feature class...')
+    fields = arcpy.ListFields(dataset_in)
+    for field in fields:
+        if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN']:
+            print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                                                                           field.type,
+                                                                           field.length))
+            arcpy.AddField_management(in_table=dataset_out,
+                                      field_name=field.name,
+                                      field_type=field.type,
+                                      field_precision=field.precision,
+                                      field_scale=field.scale,
+                                      field_length=field.length,
+                                      field_alias=field.aliasName,
+                                      field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
+                                      field_is_required=field.required,
+                                      field_domain=field.domain)
+    del field, fields
+    print('\t\tListed fields in out feature class and created in new feature class.')
+    # Append data from out dataset to new dataset
+    print('\t\tAppending rows from in feature class to out feature class...')
+    arcpy.Append_management(inputs=[dataset_in],
+                            target=dataset_out,
+                            schema_type='TEST')
+    print('\t\tAppended rows from in feature class to out feature class.')
+    #
+    # Copy CS ArcSDE datasets and their related tables
     for dataset in data_dictionary.keys():
         print('\tdataset:\t\t{}'.format(dataset))
         #
@@ -260,12 +312,68 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-add_guids = False
+add_guids = True
 
 
 if add_guids:
     # Add GUID field to file geodatabase datasets
     print('\n\nAdding GUID fields to datasets...')
+
+    #
+    # Add GUID field to the BLKDATA feature class
+    dataset = r'BLKDATA'
+    #Define output dataset
+    dataset_out = os.path.join(fgdb, dataset)
+    #  Display input and output dataset paths
+    print('\t\tdataset_in:\t\t{}'.format(dataset_in))
+    print('\t\tdataset_out:\t\t{}'.format(dataset_out))
+    # Define GUID field
+    guid_field = dataset + '_GUID'
+    print('\t\tguid_field:\t\t{}'.format(guid_field))
+    # Add GUID field to output dataset
+    print('\t\tAdding GUID field {}...'.format(guid_field))
+    # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
+    # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
+    # See:  http://support.esri.com/technical-article/000010006
+    arcpy.AddField_management(in_table=dataset_out,
+                              field_name=guid_field,
+                              field_type='GUID',
+                              field_precision='#',
+                              field_scale='#',
+                              field_length='#',
+                              field_alias='#',
+                              field_is_nullable='NULLABLE',  # field_is_nullable='NULLABLE',
+                              field_is_required='REQUIRED',
+                              field_domain='#')
+    print('\t\tAdded GUID field {}.'.format(guid_field))
+    print('\t\tCalculating GUID field {}...'.format(guid_field))
+    code_block = '''def GUID():
+        import uuid
+        return \'{\' + str(uuid.uuid4()) + \'}\''''
+    arcpy.CalculateField_management(in_table=dataset_out,
+                                    field=guid_field,
+                                    expression='GUID()',
+                                    expression_type='PYTHON',
+                                    code_block=code_block)
+    print('\t\tCalculated GUID field {}.'.format(guid_field))
+    # Add attribute index to newly added GUID field
+    print('\t\tAdding attribute index to GUID field {}...'.format(guid_field))
+    index_name = guid_field + '_IDX'
+    if len(arcpy.ListIndexes(dataset=dataset_out,
+                             wild_card=index_name)) > 0:
+        print('\t\t\tDeleting attribute index {}...'.format(index_name))
+        arcpy.RemoveIndex_management(in_table=dataset_out,
+                                     index_name=index_name)
+        print('\t\t\tDeleted attribute index {}.'.format(index_name))
+    arcpy.AddIndex_management(in_table=dataset_out,
+                              fields=guid_field,
+                              index_name=index_name,
+                              unique='UNIQUE',
+                              ascending='NON_ASCENDING')
+    print('\t\tAdded attribute index to GUID field {}.'.format(guid_field))
+
+
+    # Add GUID field to datasets defined by data_dictionary
     for dataset in data_dictionary.keys():
         print('\tdataset:\t\t{}'.format(dataset))
         #
@@ -366,7 +474,7 @@ if add_guids:
     print('Added GUID fields to datasets.')
 
 
-create_relationship_classes = False
+create_relationship_classes = True
 
 
 if create_relationship_classes:
@@ -453,7 +561,8 @@ if check_guids:
     print('\n' * 5 + 'Checking GUID fields in related datasets...')
     #
     # Set sample size
-    sample_size = 10
+    sample_size = 25
+    print('sample_size:\t\t{}'.format(sample_size))
     #
     for dataset in data_dictionary.keys():
     # for dataset in ['SCPTDATA']:
