@@ -33,6 +33,11 @@ print('sys.versioninfo:\t\t\t\t{}'.format(sys.version_info))
 print('platform.architecture():\t\t{}'.format(platform.architecture()))
 
 
+print('\n\nStarted {0} at {1} on {2}...'.format(os.path.basename(__file__),
+                                                       datetime.datetime.now().strftime('%H:%M:%S'),
+                                                       datetime.datetime.now().strftime('%Y-%m-%d')))
+
+
 # Define NODATA value
 NODATA = -9999.0
 
@@ -318,7 +323,6 @@ add_guids = True
 if add_guids:
     # Add GUID field to file geodatabase datasets
     print('\n\nAdding GUID fields to datasets...')
-
     #
     # Add GUID field to the BLKDATA feature class
     dataset = r'BLKDATA'
@@ -474,85 +478,6 @@ if add_guids:
     print('Added GUID fields to datasets.')
 
 
-create_relationship_classes = True
-
-
-if create_relationship_classes:
-    # Add relationship classes
-    print('\n\nCreating relationship classes...')
-    for dataset in data_dictionary.keys():
-        print('\tdataset:\t\t{}'.format(dataset))
-        #
-        # Define output dataset
-        dataset_out = os.path.join(fgdb, dataset)
-        print('\t\tdataset_out:\t\t{}'.format(dataset_out))
-        #
-        # Get related table from data dictionary
-        related_table = data_dictionary[dataset]['related_table']
-        # print('\t\trelated_table:\t\t{}'.format(related_table))
-        #
-        # Get related table from data dictionary
-        guid_field = data_dictionary[dataset]['guid_field']
-        print('\t\tguid_field:\t\t{}'.format(guid_field))
-        #
-        # Define output related table path
-        related_table_out = os.path.join(fgdb, related_table)
-        print('\t\trelated_table_out:\t\t{}'.format(related_table_out))
-        #
-        #  Create relationship class
-        print('\t\tCreating relationship class...')
-        print('\t\t\torigin_table:\t\t\t\t{}'.format(dataset_out))
-        print('\t\t\tdestination_table:\t\t\t{}'.format(related_table_out))
-        out_relationship_class = os.path.basename(dataset_out) + '_' + os.path.basename(related_table_out)
-        print('\t\t\tout_relationship_class:\t\t{}'.format(out_relationship_class))
-        relationship_type = 'COMPOSITE'
-        print('\t\t\trelationship_type:\t\t\t{}'.format(relationship_type))
-        forward_label = os.path.basename(dataset_out)
-        print('\t\t\tforward_label:\t\t\t\t{}'.format(forward_label))
-        backward_label = os.path.basename(related_table_out)
-        print('\t\t\tbackward_label:\t\t\t\t{}'.format(backward_label))
-        message_direction = 'FORWARD'
-        print('\t\t\tmessage_direction:\t\t\t{}'.format(message_direction))
-        cardinality = 'ONE_TO_MANY'
-        print('\t\t\tcardinality:\t\t\t\t{}'.format(cardinality))
-        attributed = 'NONE'
-        print('\t\t\tattributed:\t\t\t\t\t{}'.format(attributed))
-        origin_primary_key = guid_field
-        print('\t\t\torigin_primary_key:\t\t\t{}'.format(origin_primary_key))
-        origin_foreign_key = ''
-        print('\t\t\torigin_foreign_key:\t\t\t{}'.format(origin_foreign_key))
-        destination_primary_key = guid_field
-        print('\t\t\tdestination_primary_key:\t{}'.format(destination_primary_key))
-        destination_foreign_key = ''
-        print('\t\t\tdestination_foreign_key:\t{}'.format(destination_foreign_key))
-        # desc = arcpy.Describe(value=os.path.join(fgdb, out_relationship_class))
-        # print('desc.name:\t\t{}'.format(desc.name))
-        # if hasattr(desc, 'name'):
-        #     print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
-        #     arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
-        #     print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
-        if arcpy.Exists(dataset=os.path.join(fgdb, out_relationship_class)):
-            print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
-            arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
-            print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
-        arcpy.CreateRelationshipClass_management(origin_table=dataset_out,
-                                                 destination_table=related_table_out,
-                                                 out_relationship_class=out_relationship_class,
-                                                 relationship_type=relationship_type,
-                                                 forward_label=forward_label,
-                                                 backward_label=backward_label,
-                                                 message_direction=message_direction,
-                                                 cardinality=cardinality,
-                                                 attributed=attributed,
-                                                 origin_primary_key=origin_primary_key,
-                                                 origin_foreign_key=origin_foreign_key,
-                                                 destination_primary_key=destination_primary_key,
-                                                 destination_foreign_key=destination_foreign_key)
-        print('\t\tCreating relationship class...')
-    #
-    print('Creating relationship classes...')
-
-
 check_guids = True
 
 
@@ -654,10 +579,196 @@ if check_guids:
     print('\n\nChecked GUID fields in related datasets.' + '\n' * 5)
 
 
+create_relationship_classes = True
+
+
+if create_relationship_classes:
+    # Add relationship classes
+    print('\n\nCreating relationship classes...')
+    for dataset in data_dictionary.keys():
+        print('\tdataset:\t\t{}'.format(dataset))
+        #
+        # Define output dataset
+        dataset_out = os.path.join(fgdb, dataset)
+        print('\t\tdataset_out:\t\t{}'.format(dataset_out))
+        #
+        # Get related table from data dictionary
+        related_table = data_dictionary[dataset]['related_table']
+        # print('\t\trelated_table:\t\t{}'.format(related_table))
+        #
+        # Get related table from data dictionary
+        guid_field = data_dictionary[dataset]['guid_field']
+        print('\t\tguid_field:\t\t{}'.format(guid_field))
+        #
+        # Define output related table path
+        related_table_out = os.path.join(fgdb, related_table)
+        print('\t\trelated_table_out:\t\t{}'.format(related_table_out))
+        #
+        #  Create relationship class
+        print('\t\tCreating relationship class...')
+        print('\t\t\torigin_table:\t\t\t\t{}'.format(dataset_out))
+        print('\t\t\tdestination_table:\t\t\t{}'.format(related_table_out))
+        out_relationship_class = os.path.basename(dataset_out) + '_' + os.path.basename(related_table_out)
+        print('\t\t\tout_relationship_class:\t\t{}'.format(out_relationship_class))
+        relationship_type = 'COMPOSITE'
+        print('\t\t\trelationship_type:\t\t\t{}'.format(relationship_type))
+        forward_label = os.path.basename(dataset_out)
+        print('\t\t\tforward_label:\t\t\t\t{}'.format(forward_label))
+        backward_label = os.path.basename(related_table_out)
+        print('\t\t\tbackward_label:\t\t\t\t{}'.format(backward_label))
+        message_direction = 'FORWARD'
+        print('\t\t\tmessage_direction:\t\t\t{}'.format(message_direction))
+        cardinality = 'ONE_TO_MANY'
+        print('\t\t\tcardinality:\t\t\t\t{}'.format(cardinality))
+        attributed = 'NONE'
+        print('\t\t\tattributed:\t\t\t\t\t{}'.format(attributed))
+        origin_primary_key = guid_field
+        print('\t\t\torigin_primary_key:\t\t\t{}'.format(origin_primary_key))
+        origin_foreign_key = ''
+        print('\t\t\torigin_foreign_key:\t\t\t{}'.format(origin_foreign_key))
+        destination_primary_key = guid_field
+        print('\t\t\tdestination_primary_key:\t{}'.format(destination_primary_key))
+        destination_foreign_key = ''
+        print('\t\t\tdestination_foreign_key:\t{}'.format(destination_foreign_key))
+        # desc = arcpy.Describe(value=os.path.join(fgdb, out_relationship_class))
+        # print('desc.name:\t\t{}'.format(desc.name))
+        # if hasattr(desc, 'name'):
+        #     print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
+        #     arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
+        #     print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
+        if arcpy.Exists(dataset=os.path.join(fgdb, out_relationship_class)):
+            print('\t\t\tDeleting existing relationship class {}...'.format(out_relationship_class))
+            arcpy.Delete_management(in_data=os.path.join(fgdb, out_relationship_class))
+            print('\t\t\tDeleted existing relationship class {}.'.format(out_relationship_class))
+        arcpy.CreateRelationshipClass_management(origin_table=dataset_out,
+                                                 destination_table=related_table_out,
+                                                 out_relationship_class=out_relationship_class,
+                                                 relationship_type=relationship_type,
+                                                 forward_label=forward_label,
+                                                 backward_label=backward_label,
+                                                 message_direction=message_direction,
+                                                 cardinality=cardinality,
+                                                 attributed=attributed,
+                                                 origin_primary_key=origin_primary_key,
+                                                 origin_foreign_key=origin_foreign_key,
+                                                 destination_primary_key=destination_primary_key,
+                                                 destination_foreign_key=destination_foreign_key)
+        print('\t\tCreating relationship class...')
+    #
+    print('Creating relationship classes...')
+
+
+copy_domains = True
+
+
+if copy_domains:
+    print('\n\nCopying domains and applying to fields...')
+    # Define in file geodatabase from which to copy domains
+    # This file geodatabase was created from an XML Workspace document created from the CS ArcSDE geodatabase
+    fgdb_in = r'E:\CountrysideSurvey\esri-uk\domains\domains.gdb'
+    print('\tfgdb_in:\t\t{}'.format(fgdb_in))
+    # Define temporary file geodatabase
+    fgdb_temp = os.path.dirname(fgdb_in)
+    fgdb_temp = os.path.join(fgdb_temp, r'temporary_domain_tables' + r'.gdb')
+    print('\t\tfgdb_temp:\t\t{}'.format(fgdb_temp))
+    # Create temporary file geodatabase
+    if arcpy.Exists(fgdb_temp):
+        print('\t\tDeleting fgdb_temp {}...'.format(fgdb_temp))
+        arcpy.Delete_management(fgdb_temp)
+        print('\t\tDeleted fgdb_temp {}.'.format(fgdb_temp))
+    print('\tCreating fgdb_temp {}...'.format(fgdb_temp))
+    arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb_temp),
+                                   out_name=os.path.basename(fgdb_temp),
+                                   out_version='CURRENT')
+    print('\t\tCreated fgdb_temp {}.'.format(fgdb_temp))
+    # Get a list of domains from the in file geodatabase
+    domains = arcpy.da.ListDomains(fgdb_in)
+    # Loop through list of domains in the in file geodatabase
+    for domain in domains:
+        # Only get CS 2007 domains
+        if domain.name.startswith('CS2007_'):
+            # Print out domain name and type
+            print('\t#\n\tDomain {0} is of type {1}'.format(domain.name,
+                                                            domain.domainType))
+            # Print out domain values
+            if domain.domainType == 'CodedValue':
+                coded_values = domain.codedValues
+                for val, desc in coded_values.items():
+                    print('\t\t{0} : {1}'.format(val, desc))
+            elif domain.domainType == 'Range':
+                print('\t\tMin: {0}'.format(domain.range[0]))
+                print('\t\tMax: {0}'.format(domain.range[1]))
+            # Convert domain to a table in temporary fgdb
+            print('\tConverting domain to table in temporary file geodatabase...')
+            table_out = domain.name + '_table'
+            table_out = os.path.join(fgdb_temp, table_out)
+            print('\t\ttable_out:\t\t\t\t{}'.format(table_out))
+            code_field = 'Code'
+            print('\t\tcode_field:\t\t\t\t{}'.format(code_field))
+            description_field = 'Description'
+            print('\t\tdescription_field:\t\t{}'.format(description_field))
+            arcpy.DomainToTable_management(in_workspace=fgdb_in,
+                                           domain_name=domain.name,
+                                           out_table=table_out,
+                                           code_field=code_field,
+                                           description_field=description_field,
+                                           configuration_keyword='')
+            print('\tConverted domain to table in temporary file geodatabase.')
+            # Convert table to domain in the out file geodatabase
+            print('\tConverting table to domain in the out file geodatabase...')
+            existing_domains_list = arcpy.Describe(fgdb).domains
+            print('\t\texisiting_domains_list:\t\t{}'.format(existing_domains_list))
+            if domain.name in existing_domains_list:
+                print('\t\t\tDeleting existing domain {} in file geodatabase...'.format(domain.name))
+                arcpy.DeleteDomain_management(in_workspace=fgdb,
+                                              domain_name=domain.name)
+                print('\t\t\tDeleted existing domain {} in file geodatabase.'.format(domain.name))
+            domain_description = domain.name.replace('_', ' ') + ' domain'
+            print('\t\tdomain_description:\t\t{}'.format(domain_description))
+            arcpy.TableToDomain_management(in_table=table_out,
+                                           code_field=code_field,
+                                           description_field=description_field,
+                                           in_workspace=fgdb,
+                                           domain_name=domain.name,
+                                           domain_description=domain_description,
+                                           update_option='REPLACE')
+            print('\tConverted table to domain in the out file geodatabase.')
+            # Assign domain to field
+            print('\tAssigning domain to a field ...')
+            field_name = domain.name.replace('CS2007_', '')
+            print('\t\tfield_name:\t\t{}'.format(field_name))
+            arcpy.env.workspace = fgdb
+            tables = arcpy.ListTables()
+            for table in tables:
+                print('\t\t\ttable:\t\t{}'.format(table))
+                fields = arcpy.ListFields(os.path.join(fgdb, table))
+                for field in fields:
+                    assign = 'Assign domain' if field_name == field.name else 'Do not assign domain'
+                    if assign == 'Assign domain':
+                        print('\t\t\t\t\{0} is a type of {1}\t\t{2}'.format(field.name,
+                                                                            field.type,
+                                                                            assign))
+                        arcpy.AssignDomainToField_management(in_table=os.path.join(fgdb, table),
+                                                             field_name=field_name,
+                                                             domain_name=domain.name,
+                                                             subtype_code='')
+            print('\tAssigned domain to a field.')
+    # # Delete temporary file geodatabase used to store intermediate domain tables
+    # print('\tDeleting fgdb_temp {}...'.format(fgdb_temp))
+    # arcpy.Delete_management(fgdb_temp)
+    # print('\tDeleted fgdb_temp {}.'.format(fgdb_temp))
+    #
+    print('\n\nCopied domains and applied to fields.')
+
+
 # Capture end_time
 end_time = time.time()
 
 
 # Report elapsed_time (= end_time - start_time)
 print('\n\nIt took {} to execute this.'.format(hms_string(end_time - start_time)))
-print('\n\nDone.\n')
+
+
+print('\n\nFinished {0} at {1} on {2}.\n'.format(os.path.basename(__file__),
+                                                 datetime.datetime.now().strftime('%H:%M:%S'),
+                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
