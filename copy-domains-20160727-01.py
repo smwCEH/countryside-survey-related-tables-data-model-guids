@@ -1,8 +1,23 @@
 import os
 import sys
-
-
+import time
 import arcpy
+
+
+# Capture start_time
+start_time = time.time()
+
+
+def hms_string(sec_elapsed):
+    """Function to display elapsed time
+
+    Keyword arguments:
+    sec_elapsed -- elapsed time in seconds
+    """
+    h = int(sec_elapsed / (60 * 60))
+    m = int((sec_elapsed % (60 * 60)) / 60)
+    s = sec_elapsed % 60.
+    return "{}:{:>02}:{:>05.2f}".format(h, m, s)
 
 
 # Define in file geodatabase
@@ -73,6 +88,13 @@ for domain in domains:
         #
         # Convert table to domain in the out file geodatabase
         print('Converting table to domain in the out file geodatabase...')
+        existing_domains_list = arcpy.Describe(fgdb_out).domains
+        print('exisiting_domains_list:\t\t{}'.format(existing_domains_list))
+        if domain.name in existing_domains_list:
+            print('\tDeleting existing domain {} in file geodatabase...'.format(domain.name))
+            arcpy.DeleteDomain_management(in_workspace=fgdb_out,
+                                          domain_name=domain.name)
+            print('\tDeleted existing domain {} in file geodatabase.'.format(domain.name))
         domain_description = domain.name.replace('_', ' ') + ' domain'
         print('domain_description:\t\t{}'.format(domain_description))
         arcpy.TableToDomain_management(in_table=table_out,
@@ -85,21 +107,38 @@ for domain in domains:
         print('Converted table to domain in the out file geodatabase.')
         #
         # Assign domain to field
-        # arcpy.AssignDomainToField_management(in_table=,
-        #                                      field_name=,
-        #                                      domain_name=,
-        #                                      subtype_code=)
+        print('Assigning domain to a field ...')
+        field_name = domain.name.replace('CS2007_', '')
+        print('field_name:\t\t{}'.format(field_name))
+        arcpy.env.workspace = fgdb_out
+        tables = arcpy.ListTables()
+        for table in tables:
+            print('\ttable:\t\t{}'.format(table))
+            fields = arcpy.ListFields(os.path.join(fgdb_out, table))
+            for field in fields:
+                assign = 'Assign domain' if field_name == field.name else 'Do not assign domain'
+                if assign == 'Assign domain':
+                    print('\t\t{0} is a type of {1}\t\t{2}'.format(field.name,
+                                                            field.type,
+                                                            assign))
+                    arcpy.AssignDomainToField_management(in_table=os.path.join(fgdb_out, table),
+                                                         field_name=field_name,
+                                                         domain_name=domain.name,
+                                                         subtype_code='')
+        print('Assigned domain to a field.')
 
 
+# # Delete temporary file geodatabase
+# print('\tDeleting fgdb_temp {}...'.format(fgdb_temp))
+# arcpy.Delete_management(fgdb_temp)
+# print('\tDeleted fgdb_temp {}.'.format(fgdb_temp))
 
 
+# Capture end_time
+end_time = time.time()
 
 
-sys.exit()
-
-
-# Delete temporary file geodatabase
-print('\tDeleting fgdb_temp {}...'.format(fgdb_temp))
-arcpy.Delete_management(fgdb_temp)
-print('\tDeleted fgdb_temp {}.'.format(fgdb_temp))
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {} to execute this.'.format(hms_string(end_time - start_time)))
+print('\n\nDone.\n')
 
