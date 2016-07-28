@@ -747,7 +747,7 @@ if copy_domains:
                 for field in fields:
                     assign = 'Assign domain' if field_name == field.name else 'Do not assign domain'
                     if assign == 'Assign domain':
-                        print('\t\t\t\t\{0} is a type of {1}\t\t{2}'.format(field.name,
+                        print('\t\t\t\t{0} is a type of {1}\t\t{2}'.format(field.name,
                                                                             field.type,
                                                                             assign))
                         arcpy.AssignDomainToField_management(in_table=os.path.join(fgdb, table),
