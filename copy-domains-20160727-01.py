@@ -55,24 +55,34 @@ for domain in domains:
             print('\tMax: {0}'.format(domain.range[1]))
         #
         # Convert domain to a table in temporary fgdb
+        print('Converting domain to table in temporary file geodatabase...')
         table_out = domain.name + '_table'
         table_out = os.path.join(fgdb_temp, table_out)
-        print('\ttable_out:\t\t{}'.format(table_out))
+        print('\ttable_out:\t\t\t\t{}'.format(table_out))
+        code_field = 'Code'
+        print('\tcode_field:\t\t\t\t{}'.format(code_field))
+        description_field = 'Description'
+        print('\tdescription_field:\t\t{}'.format(description_field))
         arcpy.DomainToTable_management(in_workspace=fgdb_in,
                                        domain_name=domain.name,
                                        out_table=table_out,
-                                       code_field='Code',
-                                       description_field='Description',
+                                       code_field=code_field,
+                                       description_field=description_field,
                                        configuration_keyword='')
+        print('Converted domain to table in temporary file geodatabase.')
         #
         # Convert table to domain in the out file geodatabase
-        # arcpy.TableToDomain_management(in_table=,
-        #                              code_field=,
-        #                              description_field=,
-        #                              in_workspace=,
-        #                              domain_name=,
-        #                              domain_description=,
-        #                              update_option=)
+        print('Converting table to domain in the out file geodatabase...')
+        domain_description = domain.name.replace('_', ' ') + ' domain'
+        print('domain_description:\t\t{}'.format(domain_description))
+        arcpy.TableToDomain_management(in_table=table_out,
+                                       code_field=code_field,
+                                       description_field=description_field,
+                                       in_workspace=fgdb_out,
+                                       domain_name=domain.name,
+                                       domain_description=domain_description,
+                                       update_option='REPLACE')
+        print('Converted table to domain in the out file geodatabase.')
         #
         # Assign domain to field
         # arcpy.AssignDomainToField_management(in_table=,
