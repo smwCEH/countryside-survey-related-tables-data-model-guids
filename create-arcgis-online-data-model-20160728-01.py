@@ -33,9 +33,11 @@ print('sys.versioninfo:\t\t\t\t{}'.format(sys.version_info))
 print('platform.architecture():\t\t{}'.format(platform.architecture()))
 
 
-print('\n\nStarted {0} at {1} on {2}...'.format(os.path.basename(__file__),
-                                                       datetime.datetime.now().strftime('%H:%M:%S'),
-                                                       datetime.datetime.now().strftime('%Y-%m-%d')))
+# Print script filename, start date and time
+script = os.path.basename(__file__)
+print('\n\nStarted {0} at {1} on {2}...'.format(script,
+                                                datetime.datetime.now().strftime('%H:%M:%S'),
+                                                datetime.datetime.now().strftime('%Y-%m-%d')))
 
 
 # Define NODATA value
@@ -769,6 +771,7 @@ end_time = time.time()
 print('\n\nIt took {} to execute this.'.format(hms_string(end_time - start_time)))
 
 
-print('\n\nFinished {0} at {1} on {2}.\n'.format(os.path.basename(__file__),
+# Print script filename, finish date and time
+print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
                                                  datetime.datetime.now().strftime('%H:%M:%S'),
                                                  datetime.datetime.now().strftime('%Y-%m-%d')))
