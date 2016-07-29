@@ -388,6 +388,20 @@ if copy_datasets:
                                   field_domain='')
         print('\t\tAdded Editor and Date of Edit fields to {} feature class.'.format(dataset_out))
     #
+    # Add Point_Proximity field to POINTDATA feature class
+    print('\tAdding Point_Proximity field to POINTDATA feature class...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'POINTDATA'),
+                              field_name='Point_Proximity',
+                              field_type='FLOAT',
+                              field_precision='',
+                              field_scale='',
+                              field_length='',
+                              field_alias='',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdding Point_Proximity field to POINTDATA feature class.')
+    #
     print('Copied datasets.')
 
 
@@ -812,7 +826,8 @@ if copy_domains:
             field_name = domain.name.replace('CS2007_', '')
             print('\t\tfield_name:\t\t{}'.format(field_name))
             arcpy.env.workspace = fgdb
-            tables = arcpy.ListTables()
+            # tables = arcpy.ListTables()
+            tables = ['SCPTDATA', 'LINEARDATA', 'POINTDATA', 'COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
             for table in tables:
                 print('\t\t\ttable:\t\t{}'.format(table))
                 fields = arcpy.ListFields(os.path.join(fgdb, table))
