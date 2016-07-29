@@ -167,6 +167,30 @@ if copy_datasets:
                             schema_type='TEST')
     print('\t\tAppended rows from in feature class to out feature class.')
     #
+    # Add Editor and Date of edit fields to BLKDATA feature class
+    print('\t\tAdding Editor and Date of Edit fields to {} feature class...'.format(dataset_out))
+    arcpy.AddField_management(in_table=dataset_out,
+                              field_name='EDITOR',
+                              field_type='TEXT',
+                              field_precision='',
+                              field_scale='',
+                              field_length=25,
+                              field_alias='',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    arcpy.AddField_management(in_table=dataset_out,
+                              field_name='DATE_OF_EDIT',
+                              field_type='DATE',
+                              field_precision='',
+                              field_scale='',
+                              field_length='',
+                              field_alias='',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\t\tAdded Editor and Date of Edit fields to {} feature class.'.format(dataset_out))
+    #
     # Copy CS ArcSDE datasets and their related tables
     for dataset in data_dictionary.keys():
         print('\tdataset:\t\t{}'.format(dataset))
@@ -244,6 +268,30 @@ if copy_datasets:
                                     target=dataset_out,
                                     schema_type='TEST')
             print('\t\tAppended rows from in feature class to out feature class.')
+            #
+            # Add Editor and Date of edit fields to BLKDATA feature class
+            print('\t\tAdding Editor and Date of Edit fields to {} feature class...'.format(dataset_out))
+            arcpy.AddField_management(in_table=dataset_out,
+                                      field_name='EDITOR',
+                                      field_type='TEXT',
+                                      field_precision='',
+                                      field_scale='',
+                                      field_length=25,
+                                      field_alias='',
+                                      field_is_nullable='NULLABLE',
+                                      field_is_required='NON_REQUIRED',
+                                      field_domain='')
+            arcpy.AddField_management(in_table=dataset_out,
+                                      field_name='DATE_OF_EDIT',
+                                      field_type='DATE',
+                                      field_precision='',
+                                      field_scale='',
+                                      field_length='',
+                                      field_alias='',
+                                      field_is_nullable='NULLABLE',
+                                      field_is_required='NON_REQUIRED',
+                                      field_domain='')
+            print('\t\tAdded Editor and Date of Edit fields to {} feature class.'.format(dataset_out))
         #
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
@@ -315,6 +363,30 @@ if copy_datasets:
                                 target=related_table_out,
                                 schema_type='TEST')
         print('\t\tAppended rows from in related table to out related table.')
+        #
+        # Add Editor and Date of edit fields to BLKDATA feature class
+        print('\t\tAdding Editor and Date of Edit fields to {} feature class...'.format(dataset_out))
+        arcpy.AddField_management(in_table=related_table_out,
+                                  field_name='EDITOR',
+                                  field_type='TEXT',
+                                  field_precision='',
+                                  field_scale='',
+                                  field_length=25,
+                                  field_alias='',
+                                  field_is_nullable='NULLABLE',
+                                  field_is_required='NON_REQUIRED',
+                                  field_domain='')
+        arcpy.AddField_management(in_table=related_table_out,
+                                  field_name='DATE_OF_EDIT',
+                                  field_type='DATE',
+                                  field_precision='',
+                                  field_scale='',
+                                  field_length='',
+                                  field_alias='',
+                                  field_is_nullable='NULLABLE',
+                                  field_is_required='NON_REQUIRED',
+                                  field_domain='')
+        print('\t\tAdded Editor and Date of Edit fields to {} feature class.'.format(dataset_out))
     #
     print('Copied datasets.')
 
