@@ -392,10 +392,10 @@ if copy_datasets:
     print('\tAdding Point_Proximity field to POINTDATA feature class...')
     arcpy.AddField_management(in_table=os.path.join(fgdb, 'POINTDATA'),
                               field_name='Point_Proximity',
-                              field_type='FLOAT',
+                              field_type='TEXT',
                               field_precision='',
                               field_scale='',
-                              field_length='',
+                              field_length=10,
                               field_alias='',
                               field_is_nullable='NULLABLE',
                               field_is_required='NON_REQUIRED',
@@ -900,10 +900,10 @@ if copy_domains:
         existing_domains_list = arcpy.Describe(fgdb).domains
         print('\t\texisiting_domains_list:\t\t{}'.format(existing_domains_list))
         if domain in existing_domains_list:
-            print('\t\t\tDeleting existing domain {} in file geodatabase...'.format(domain.name))
+            print('\t\t\tDeleting existing domain {} in file geodatabase...'.format(domain))
             arcpy.DeleteDomain_management(in_workspace=fgdb,
-                                          domain_name=domain.name)
-            print('\t\t\tDeleted existing domain {} in file geodatabase.'.format(domain.name))
+                                          domain_name=domain)
+            print('\t\t\tDeleted existing domain {} in file geodatabase.'.format(domain))
         domain_description = domain.replace('_', ' ') + ' domain'
         print('\t\tdomain_description:\t\t{}'.format(domain_description))
         arcpy.TableToDomain_management(in_table=wgem_table,
@@ -933,7 +933,7 @@ if copy_domains:
                                                                         assign))
                     arcpy.AssignDomainToField_management(in_table=os.path.join(fgdb, table),
                                                          field_name=field_name,
-                                                         domain_name=domain.name,
+                                                         domain_name=domain,
                                                          subtype_code='')
         print('\tAssigned domain to a field.')
     #
