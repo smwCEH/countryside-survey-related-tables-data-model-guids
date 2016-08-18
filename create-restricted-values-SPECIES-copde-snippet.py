@@ -69,41 +69,88 @@ print('\n\narcsde_fd:\t\t{}'.format(arcsde_fd))
 
 
 print('\n\nCreating Sweet Mapping Arcade code snippet...')
+
+
 fecodes_table = arcsde + '\\' + arcsde_user + '.' + 'FECODES'
-print('\t#\n\tfecodes_table:\t\t{}'.format(fecodes_table))
+# print('\t#\n\tfecodes_table:\t\t{}'.format(fecodes_table))
+
+
 fecodes_dependent_table = arcsde + '\\' + arcsde_user + '.' + 'FECODES_DEPENDENT'
-print('\t#\n\tfecodes_dependent_table:\t\t{}'.format(fecodes_dependent_table))
+# print('\t#\n\tfecodes_dependent_table:\t\t{}'.format(fecodes_dependent_table))
+
+
+code_snippet_file = 'restricted-values-SPECIES.txt'
+code_snippet_file = os.path.join(r'E:\CountrysideSurvey\esri-uk\sweet-mapping\sweet-config-20160817', code_snippet_file)
+print('\n\ncode_snippet_file:\t\t{0}'.format(code_snippet_file))
+file = open(code_snippet_file, 'w')
+
+
+snippet_string = 'if (IsEmpty($VALUE)) {\n\treturn true;\n}\n\n'
+print('{0}'.format(snippet_string))
+file.write(snippet_string)
+
+
 outer_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
-print('\t#\n\touter_search_cursor_fields:\t\t{}'.format(outer_search_cursor_fields))
-outer_search_cursor_where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
-                                                      '\'VEGETATION_TYPE\'')
-print('\touter_search_cursor_where_clause:\t\t{}'.format(outer_search_cursor_where_clause))
+# print('\t#\n\touter_search_cursor_fields:\t\t{}'.format(outer_search_cursor_fields))
+outer_search_cursor_where_clause = '{0} = {1} AND {2} IS NOT NULL'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
+                                                                          '\'VEGETATION_TYPE\'',
+                                                                          arcpy.AddFieldDelimiters(fecodes_table, 'CODE'))
+# print('\touter_search_cursor_where_clause:\t\t{}'.format(outer_search_cursor_where_clause))
+total_species_count = 0
 with arcpy.da.SearchCursor(in_table=fecodes_table,
                            field_names=outer_search_cursor_fields,
                            where_clause=outer_search_cursor_where_clause) as outer_search_cursor:
     for outer_search_cursor_row in outer_search_cursor:
-        print('\t\t{0}\t\t{1}\t\t{2}'.format(outer_search_cursor_row[0],
-                                             outer_search_cursor_row[1],
-                                             outer_search_cursor_row[2]))
+        # print('\t\t{0}\t\t{1}\t\t{2}'.format(outer_search_cursor_row[0],
+        #                                      outer_search_cursor_row[1],
+        #                                      outer_search_cursor_row[2]))
         inner_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DEPENDENT_ON_COLUMN_NAME', 'DEPENDENT_ON_CODE']
-        print('\t\tinner_search_cursor_fields:\t\t{}'.format(inner_search_cursor_fields))
+        # print('\t\tinner_search_cursor_fields:\t\t{}'.format(inner_search_cursor_fields))
         inner_search_cursor_where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'DEPENDENT_ON_CODE'),
-                                                              '\'{}\''.format(outer_search_cursor_row[1]))
-        print('\t\tinner_search_cursor_where_clause:\t\t{}'.format(inner_search_cursor_where_clause))
+                                                              '\'{0}\''.format(outer_search_cursor_row[1]))
+        # print('\t\tinner_search_cursor_where_clause:\t\t{}'.format(inner_search_cursor_where_clause))
         with arcpy.da.SearchCursor(in_table=fecodes_dependent_table,
                                    field_names=inner_search_cursor_fields,
                                    where_clause=inner_search_cursor_where_clause) as inner_search_cursor:
+            species_count = 0
             for inner_search_cursor_row in inner_search_cursor:
-                print('\t\t\t{0}\t\t{1}\t\t{2}\t\t{3}'.format(inner_search_cursor_row[0],
-                                                              inner_search_cursor_row[1],
-                                                              inner_search_cursor_row[2],
-                                                              inner_search_cursor_row[3]))
+                species_count += 1
+                # print('\t\t\t{0}\t\t{1}\t\t{2}\t\t{3}'.format(inner_search_cursor_row[0],
+                #                                               inner_search_cursor_row[1],
+                #                                               inner_search_cursor_row[2],
+                #                                               inner_search_cursor_row[3]))
+                if total_species_count == 0:
+                    snippet_string = 'if ($Feature.VEGETATION_TYPE == \'{0}\') {1}\n\treturn DECODE($VALUE, \'{2}\', TRUE'.format(outer_search_cursor_row[1],
+                                                                                                                                 '{',
+                                                                                                                                 str(inner_search_cursor_row[1]))
+                if species_count == 1:
+                    snippet_string = 'else if ($Feature.VEGETATION_TYPE == \'{0}\') {1}\n\treturn DECODE($VALUE, \'{2}\', TRUE'.format(outer_search_cursor_row[1],
+                                                                                                                                      '{',
+                                                                                                                                      str(inner_search_cursor_row[1]))
+                else:
+                    snippet_string += ', \'' + str(inner_search_cursor_row[1]) + '\', TRUE'
+            snippet_string += ', FALSE);\n{}\n'.format('}')
+            # print('\t\tspecies_count:\t\t{}'.format(species_count))
+            total_species_count += species_count
+            del species_count
+            # print('\t\tsnippet_string:\t\t{}'.format(snippet_string))
+            print('{0}'.format(snippet_string))
+            file.write(snippet_string)
+
+
 
     del inner_search_cursor_row, inner_search_cursor, inner_search_cursor_where_clause, inner_search_cursor_fields
 del outer_search_cursor_row, outer_search_cursor, outer_search_cursor_where_clause, outer_search_cursor_fields
+# print('\t#\n\ttotal_species_count:\t\t{}'.format(total_species_count))
+del total_species_count
 
 
+snippet_string = 'else {0}\n\treturn true;\n{1}\n'.format('{', '}')
+print('{0}'.format(snippet_string))
+file.write(snippet_string)
 
+
+file.close()
 
 
 print('\n\nCreated Sweet Mapping Arcade code snippet.')
