@@ -70,24 +70,43 @@ print('\n\narcsde_fd:\t\t{}'.format(arcsde_fd))
 
 print('\n\nCreating Sweet Mapping Arcade code snippet...')
 fecodes_table = arcsde + '\\' + arcsde_user + '.' + 'FECODES'
-print('\n\nfecodes_table:\t\t{}'.format(fecodes_table))
-where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
-                                  '\'VEGETATION_TYPE\'')
-print('\twhere_clause:\t\t{}'.format(where_clause))
-search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
-print('\tsearch_cursor_fields:\t\t{}'.format(search_cursor_fields))
+print('\t#\n\tfecodes_table:\t\t{}'.format(fecodes_table))
+fecodes_dependent_table = arcsde + '\\' + arcsde_user + '.' + 'FECODES_DEPENDENT'
+print('\t#\n\tfecodes_dependent_table:\t\t{}'.format(fecodes_dependent_table))
+outer_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
+print('\t#\n\touter_search_cursor_fields:\t\t{}'.format(outer_search_cursor_fields))
+outer_search_cursor_where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
+                                                      '\'VEGETATION_TYPE\'')
+print('\touter_search_cursor_where_clause:\t\t{}'.format(outer_search_cursor_where_clause))
 with arcpy.da.SearchCursor(in_table=fecodes_table,
-                           field_names=search_cursor_fields,
-                           where_clause=where_clause) as search_cursor:
-    for search_row in search_cursor:
-        print('\t{0}\t\t{1}\t\t{2}'.format(search_row[0], search_row[1], search_row[2]))
-del search_row, search_cursor, search_cursor_fields
+                           field_names=outer_search_cursor_fields,
+                           where_clause=outer_search_cursor_where_clause) as outer_search_cursor:
+    for outer_search_cursor_row in outer_search_cursor:
+        print('\t\t{0}\t\t{1}\t\t{2}'.format(outer_search_cursor_row[0],
+                                             outer_search_cursor_row[1],
+                                             outer_search_cursor_row[2]))
+        inner_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DEPENDENT_ON_COLUMN_NAME', 'DEPENDENT_ON_CODE']
+        print('\t\tinner_search_cursor_fields:\t\t{}'.format(inner_search_cursor_fields))
+        inner_search_cursor_where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'DEPENDENT_ON_CODE'),
+                                                              '\'{}\''.format(outer_search_cursor_row[1]))
+        print('\t\tinner_search_cursor_where_clause:\t\t{}'.format(inner_search_cursor_where_clause))
+        with arcpy.da.SearchCursor(in_table=fecodes_dependent_table,
+                                   field_names=inner_search_cursor_fields,
+                                   where_clause=inner_search_cursor_where_clause) as inner_search_cursor:
+            for inner_search_cursor_row in inner_search_cursor:
+                print('\t\t\t{0}\t\t{1}\t\t{2}\t\t{3}'.format(inner_search_cursor_row[0],
+                                                              inner_search_cursor_row[1],
+                                                              inner_search_cursor_row[2],
+                                                              inner_search_cursor_row[3]))
+
+    del inner_search_cursor_row, inner_search_cursor, inner_search_cursor_where_clause, inner_search_cursor_fields
+del outer_search_cursor_row, outer_search_cursor, outer_search_cursor_where_clause, outer_search_cursor_fields
 
 
 
 
 
-print('Created Sweet Mapping Arcade code snippet.')
+print('\n\nCreated Sweet Mapping Arcade code snippet.')
 
 
 # Capture end_time
