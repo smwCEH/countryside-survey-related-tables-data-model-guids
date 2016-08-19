@@ -95,7 +95,7 @@ outer_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
 outer_search_cursor_where_clause = '{0} = {1} AND {2} IS NOT NULL'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
                                                                           '\'VEGETATION_TYPE\'',
                                                                           arcpy.AddFieldDelimiters(fecodes_table, 'CODE'))
-# print('\touter_search_cursor_where_clause:\t\t{}'.format(outer_search_cursor_where_clause))
+print('\touter_search_cursor_where_clause:\t\t{}'.format(outer_search_cursor_where_clause))
 total_species_count = 0
 with arcpy.da.SearchCursor(in_table=fecodes_table,
                            field_names=outer_search_cursor_fields,
@@ -106,15 +106,20 @@ with arcpy.da.SearchCursor(in_table=fecodes_table,
         #                                      outer_search_cursor_row[2]))
         inner_search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DEPENDENT_ON_COLUMN_NAME', 'DEPENDENT_ON_CODE']
         # print('\t\tinner_search_cursor_fields:\t\t{}'.format(inner_search_cursor_fields))
-        inner_search_cursor_where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'DEPENDENT_ON_CODE'),
-                                                              '\'{0}\''.format(outer_search_cursor_row[1]))
-        # print('\t\tinner_search_cursor_where_clause:\t\t{}'.format(inner_search_cursor_where_clause))
+        inner_search_cursor_where_clause = '{0} = \'{1}\''.format(arcpy.AddFieldDelimiters(fecodes_table, 'DEPENDENT_ON_CODE'),
+                                                                  outer_search_cursor_row[1])
+        print('\t\tinner_search_cursor_where_clause:\t\t{}'.format(inner_search_cursor_where_clause))
         with arcpy.da.SearchCursor(in_table=fecodes_dependent_table,
                                    field_names=inner_search_cursor_fields,
                                    where_clause=inner_search_cursor_where_clause) as inner_search_cursor:
             species_count = 0
             for inner_search_cursor_row in inner_search_cursor:
                 species_count += 1
+
+                print('{}'.format(inner_search_cursor_row[1]))
+                if inner_search_cursor_row[1] == '820351.2':
+                    print('*****  {}  *****'.format(inner_search_cursor_row[1]))
+
                 # print('\t\t\t{0}\t\t{1}\t\t{2}\t\t{3}'.format(inner_search_cursor_row[0],
                 #                                               inner_search_cursor_row[1],
                 #                                               inner_search_cursor_row[2],
@@ -129,19 +134,20 @@ with arcpy.da.SearchCursor(in_table=fecodes_table,
                                                                                                                                       str(inner_search_cursor_row[1]))
                 else:
                     snippet_string += ', \'' + str(inner_search_cursor_row[1]) + '\', TRUE'
+                print(snippet_string)
             snippet_string += ', FALSE);\n{}\n'.format('}')
-            # print('\t\tspecies_count:\t\t{}'.format(species_count))
+            print(snippet_string)
+            print('\t\tspecies_count:\t\t{}'.format(species_count))
             total_species_count += species_count
             del species_count
             # print('\t\tsnippet_string:\t\t{}'.format(snippet_string))
             print('{0}'.format(snippet_string))
             file.write(snippet_string)
-
-
-
     del inner_search_cursor_row, inner_search_cursor, inner_search_cursor_where_clause, inner_search_cursor_fields
 del outer_search_cursor_row, outer_search_cursor, outer_search_cursor_where_clause, outer_search_cursor_fields
-# print('\t#\n\ttotal_species_count:\t\t{}'.format(total_species_count))
+
+
+print('\t#\n\ttotal_species_count:\t\t{}'.format(total_species_count))
 del total_species_count
 
 
