@@ -116,7 +116,7 @@ with arcpy.da.SearchCursor(in_table=fecodes_table,
             for inner_search_cursor_row in inner_search_cursor:
                 species_count += 1
 
-                print('{}'.format(inner_search_cursor_row[1]))
+                # print('{}'.format(inner_search_cursor_row[1]))
                 if inner_search_cursor_row[1] == '820351.2':
                     print('*****  {}  *****'.format(inner_search_cursor_row[1]))
 
@@ -124,20 +124,20 @@ with arcpy.da.SearchCursor(in_table=fecodes_table,
                 #                                               inner_search_cursor_row[1],
                 #                                               inner_search_cursor_row[2],
                 #                                               inner_search_cursor_row[3]))
-                if total_species_count == 0:
+                if species_count == 1 and total_species_count == 0:
                     snippet_string = 'if ($Feature.VEGETATION_TYPE == \'{0}\') {1}\n\treturn DECODE($VALUE, \'{2}\', TRUE'.format(outer_search_cursor_row[1],
                                                                                                                                  '{',
                                                                                                                                  str(inner_search_cursor_row[1]))
-                if species_count == 1:
+                elif species_count == 1 and total_species_count > 0:
                     snippet_string = 'else if ($Feature.VEGETATION_TYPE == \'{0}\') {1}\n\treturn DECODE($VALUE, \'{2}\', TRUE'.format(outer_search_cursor_row[1],
                                                                                                                                       '{',
                                                                                                                                       str(inner_search_cursor_row[1]))
                 else:
                     snippet_string += ', \'' + str(inner_search_cursor_row[1]) + '\', TRUE'
-                print(snippet_string)
+                # print(snippet_string)
             snippet_string += ', FALSE);\n{}\n'.format('}')
-            print(snippet_string)
-            print('\t\tspecies_count:\t\t{}'.format(species_count))
+            # print(snippet_string)
+            # print('\t\tspecies_count:\t\t{}'.format(species_count))
             total_species_count += species_count
             del species_count
             # print('\t\tsnippet_string:\t\t{}'.format(snippet_string))
@@ -147,7 +147,7 @@ with arcpy.da.SearchCursor(in_table=fecodes_table,
 del outer_search_cursor_row, outer_search_cursor, outer_search_cursor_where_clause, outer_search_cursor_fields
 
 
-print('\t#\n\ttotal_species_count:\t\t{}'.format(total_species_count))
+# print('\t#\n\ttotal_species_count:\t\t{}'.format(total_species_count))
 del total_species_count
 
 
