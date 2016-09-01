@@ -732,7 +732,10 @@ if check_guids:
                                    sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
             for row in cursor:
                 count += 1
-                print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}'.format(count, row[0], row[1], row[2]))
+                print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}'.format(count,
+                                                                          row[0],
+                                                                          row[1],
+                                                                          row[2]))
                 sample_list.append([row[0], row[1], row[2]])
         # print('\t\tsample_list:\t{0}'.format(sample_list))
         for sample in sample_list:
