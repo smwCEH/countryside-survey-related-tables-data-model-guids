@@ -442,11 +442,6 @@ if copy_datasets:
         if arcpy.Exists(related_table_out):
             arcpy.Delete_management(in_data=related_table_out,
                                     data_type='')
-        # #
-        # # Copy related table
-        # arcpy.Copy_management(in_data=related_table_in,
-        #                       out_data=related_table_out,
-        #                       data_type='')
         #
         # Create empty table
         desc = arcpy.Describe(related_table_in)
@@ -454,12 +449,6 @@ if copy_datasets:
         print('\t\t\tdataType:\t\t{0}'.format(dataType))
         arcpy.CreateTable_management(out_path=os.path.dirname(related_table_out),
                                      out_name=os.path.basename(related_table_out))
-        # fields = arcpy.ListFields(related_table_out)
-        # for field in fields:
-        #     print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-        #                                                                    field.type,
-        #                                                                    field.length))
-        # del field, fields
         #
         # List fields in dataset_in and create fields in dataset_out
         print('\t\tListing fields in out feature class and creating in new feature class...')
@@ -517,7 +506,7 @@ if copy_datasets:
         arcpy.DeleteField_management(in_table=related_table_out,
                                      drop_field=drop_fields)
         del drop_fields
-        print('\t\tDeleted non-CS2007 fields from [0] related table.'.format(related_table))
+        print('\t\tDeleted non-CS2007 fields from {0} related table.'.format(related_table))
         #
         # Add Editor and Date of edit fields to BLKDATA feature class
         print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
@@ -555,7 +544,49 @@ if copy_datasets:
                               field_is_nullable='NULLABLE',
                               field_is_required='NON_REQUIRED',
                               field_domain='')
-    print('\tAdding Point_Proximity field to POINTDATA feature class.')
+    print('\tAdded Point_Proximity field to POINTDATA feature class.')
+    #
+    # Add Polygon_Area field to SCPTDATA feature class
+    print('\tAdding Polygon_Area field to SCPTDATA feature class...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'SCPTDATA'),
+                              field_name='Polygon_Area',
+                              field_type='FLOAT',
+                              field_precision=12,
+                              field_scale=3,
+                              field_length='',
+                              field_alias='',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdded Polygon_Area field to SCPTDATA feature class.')
+    print('\tCalculating Polygon_Area...')
+    arcpy.CalculateField_management(in_table=os.path.join(fgdb, 'SCPTDATA'),
+                                    field='Polygon_Area',
+                                    expression='!shape.area@SQUAREMETERS!',
+                                    expression_type='PYTHON',
+                                    code_block='#')
+    print('\tCalculated Polygon_Area.')
+    #
+    # Add Linear_Length field to LINEARDATA feature class
+    print('\tAdding Linear_Length field to LINEARDATA feature class...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'LINEARDATA'),
+                              field_name='Linear_Length',
+                              field_type='FLOAT',
+                              field_precision=12,
+                              field_scale=3,
+                              field_length='',
+                              field_alias='',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdded Linear_Length field to LINEARDATA feature class.')
+    print('\tCalculating Linear_Length...')
+    arcpy.CalculateField_management(in_table=os.path.join(fgdb, 'LINEARDATA'),
+                                    field='Linear_Length',
+                                    expression='!shape.length@METERS!',
+                                    expression_type='PYTHON',
+                                    code_block='#')
+    print('\tCalculated Linear_Length.')
     #
     print('Copied datasets.')
 
