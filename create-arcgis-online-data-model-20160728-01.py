@@ -106,15 +106,11 @@ data_dictionary['EVENTDATA'] = {}
 data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
 data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
 data_dictionary['EVENTDATA']['related_table'] = 'SEVENTDATA'
-
-
-
+#
+# Print data_dictionary
 print(json.dumps(data_dictionary,
                  sort_keys=False,
                  indent=4))
-
-
-copy_datasets = True
 
 
 # Create dictionary to hold field aliases
@@ -213,6 +209,9 @@ print('\t{0}'.format(alias))
 print('\t#\nCreated dictionary to hold field aliases.')
 
 
+copy_datasets = False
+
+
 if copy_datasets:
     # Copy CS ArcSDE datasets to file geodatabase datasets
     print('\n\nCopying datasets...')
@@ -268,6 +267,15 @@ if copy_datasets:
                             target=dataset_out,
                             schema_type='TEST')
     print('\t\tAppended rows from in feature class to out feature class.')
+    #
+    # Delete non-CS2007 fields from BLKDATA feature class
+    print('\t\tDeleting non-CS2007 fields from BLKDATA feature class...')
+    drop_fields = ['EXTENT', 'FOREST', 'CREATE_ID']
+    print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
+    arcpy.DeleteField_management(in_table=dataset_out,
+                                 drop_field=drop_fields)
+    del drop_fields
+    print('\t\tDeleted non-CS2007 fields from BLKDATA feature class.')
     #
     # Add Editor and Date of edit fields to BLKDATA feature class
     print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
@@ -373,7 +381,26 @@ if copy_datasets:
                                     schema_type='TEST')
             print('\t\tAppended rows from in feature class to out feature class.')
             #
-            # Add Editor and Date of edit fields to BLKDATA feature class
+            # Delete non-CS2007 fields from feature class
+            print('\t\tDeleting non-CS2007 fields from {0} feature class...'.format(dataset))
+            if dataset == 'SCPTDATA':
+                drop_fields = ['SCPT', 'FORP', 'COVA', 'COFC', 'HABT', 'AMAW', 'SOIL', 'TCON', 'TRGH', 'TSLP',
+                               'CULT', 'GRAZED_SWARD', 'CANOPY_FRAGMENTATION', 'MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'MAPCODE_HA', 'CPMT', 'BLK',
+                               'FOREST', 'ALTD', 'THIN_STATUS', 'INVALID_THIN', 'CPTDATA_ID', 'THINCOUPE_ID', 'CREATE_ID', 'CANOPY_COVERP', 'NATIVE_SPIS_IN_CANOPYP', 'SEMI_NATURALP',
+                               'PLANTEDP', 'POACHED_GROUND', 'SPATIAL_ERROR']
+            elif dataset == 'LINEARDATA':
+                drop_fields = ['BLKDATA_ID', 'CREATE_ID']
+            elif dataset == 'POINTDATA':
+                drop_fields = ['MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID', 'CPTDATA_ID']
+            else:
+                sys.exit('\n\nFeature class {0} not coded for when trying to drop fields!!!\n\n'.format(dataset))
+            print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
+            arcpy.DeleteField_management(in_table=dataset_out,
+                                         drop_field=drop_fields)
+            del drop_fields
+            print('\t\tDeleted non-CS2007 fields from {0} feature class.'.format(dataset))
+            #
+            # Add Editor and Date of edit fields to feature class
             print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
             arcpy.AddField_management(in_table=dataset_out,
                                       field_name='EDITOR',
@@ -469,6 +496,28 @@ if copy_datasets:
                                 target=related_table_out,
                                 schema_type='TEST')
         print('\t\tAppended rows from in related table to out related table.')
+        #
+        # Delete non-CS2007 fields from related table
+        print('\t\tDeleting non-CS2007 fields from {0} related table...'.format(related_table))
+        if related_table == 'COMPDATA':
+            drop_fields = ['SCPT', 'SPIS', 'ORIG', 'PROP', 'ROTN', 'MIXT', 'MODEL', 'STOP', 'FCST', 'EXTLUSE',
+                           'HABT_CONDITION', 'LANDSCAPE_TYPE', 'STRUCTURE', 'BARK_STRIP_FRAYING', 'CPMT', 'PLYR', 'STOCK', 'SDATE', 'DISP', 'BLK',
+                           'FOREST', 'STRY', 'YLDC', 'SPNUM', 'THCY', 'DFST', 'DNXT', 'VOLP', 'VOLT', 'DBHP',
+                           'CREATE_ID', 'COMP_NUM', 'SPACING', 'WHCL', 'DBH_CLASS', 'FIRST_GRADEP', 'SECOND_GRADEP', 'THIRD_GRADEP', 'WOODLAND_LOSS_TYPE', 'WOODLAND_LOSS_CAUSE',
+                           'BROWSING_RATE', 'BROWSELINE', 'BASAL_SHOOTS']
+        elif related_table == 'EVENTDATA':
+            drop_fields = ['MAPCODE_BD', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID']
+        elif related_table == 'SEVENTDATA':
+            drop_fields = ['CREATE_ID']
+        elif related_table == 'PCOMPDATA':
+            drop_fields = ['CREATE_ID']
+        else:
+            sys.exit('\n\nRelated table {0} not coded for when trying to drop fields!!!\n\n'.format(related_table))
+        print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
+        arcpy.DeleteField_management(in_table=related_table_out,
+                                     drop_field=drop_fields)
+        del drop_fields
+        print('\t\tDeleted non-CS2007 fields from [0] related table.'.format(related_table))
         #
         # Add Editor and Date of edit fields to BLKDATA feature class
         print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
