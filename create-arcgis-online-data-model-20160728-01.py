@@ -591,9 +591,6 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-sys.exit()
-
-
 add_guids = True
 
 
@@ -960,7 +957,7 @@ if create_relationship_classes:
     print('Creating relationship classes...')
 
 
-copy_domains = False
+copy_domains = True
 
 
 if copy_domains:
