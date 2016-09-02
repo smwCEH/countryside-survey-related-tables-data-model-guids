@@ -560,83 +560,29 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-add_guids = True
+add_guids = False
 
 
 if add_guids:
-    # Add GUID field to file geodatabase datasets
-    print('\n\nAdding GUID fields to datasets...')
     #
-    # Add GUID field to the BLKDATA feature class
-    dataset = r'BLKDATA'
-    #Define output dataset
-    dataset_out = os.path.join(fgdb, dataset)
-    #  Display input and output dataset paths
-    print('\t\tdataset_in:\t\t{0}'.format(dataset_in))
-    print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-    # Define GUID field
-    guid_field = dataset + '_GUID'
-    print('\t\tguid_field:\t\t{0}'.format(guid_field))
-    # Add GUID field to output dataset
-    print('\t\tAdding GUID field {0}...'.format(guid_field))
-    # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
-    # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
-    # See:  http://support.esri.com/technical-article/000010006
-    arcpy.AddField_management(in_table=dataset_out,
-                              field_name=guid_field,
-                              field_type='GUID',
-                              field_precision='#',
-                              field_scale='#',
-                              field_length='#',
-                              field_alias='#',
-                              field_is_nullable='NULLABLE',  # field_is_nullable='NULLABLE',
-                              field_is_required='REQUIRED',
-                              field_domain='#')
-    print('\t\tAdded GUID field {0}.'.format(guid_field))
-    print('\t\tCalculating GUID field {0}...'.format(guid_field))
-    code_block = '''def GUID():
-        import uuid
-        return \'{\' + str(uuid.uuid4()) + \'}\''''
-    arcpy.CalculateField_management(in_table=dataset_out,
-                                    field=guid_field,
-                                    expression='GUID()',
-                                    expression_type='PYTHON',
-                                    code_block=code_block)
-    print('\t\tCalculated GUID field {0}.'.format(guid_field))
-    # Add attribute index to newly added GUID field
-    print('\t\tAdding attribute index to GUID field {0}...'.format(guid_field))
-    index_name = guid_field + '_IDX'
-    if len(arcpy.ListIndexes(dataset=dataset_out,
-                             wild_card=index_name)) > 0:
-        print('\t\t\tDeleting attribute index {0}...'.format(index_name))
-        arcpy.RemoveIndex_management(in_table=dataset_out,
-                                     index_name=index_name)
-        print('\t\t\tDeleted attribute index {0}.'.format(index_name))
-    arcpy.AddIndex_management(in_table=dataset_out,
-                              fields=guid_field,
-                              index_name=index_name,
-                              unique='UNIQUE',
-                              ascending='NON_ASCENDING')
-    print('\t\tAdded attribute index to GUID field {0}.'.format(guid_field))
-    #
-    # Add GUID field to datasets defined by data_dictionary
-    for dataset in data_dictionary.keys():
-        print('\tdataset:\t\t{0}'.format(dataset))
-        #
-        # Define output dataset
-        dataset_out = os.path.join(fgdb, dataset)
-        print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-        #
-        # Get GUID field name from data dictionary
-        guid_field = data_dictionary[dataset]['guid_field']
+    # Add GUID field to file geodatabase feature classes
+    print('\n\nAdding GUID fields to feature classes...')
+    feature_classes = ['BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA']
+    for feature_class in feature_classes:
+        print('\tfeature_class:\t\t{0}'.format(feature_class))
+        # Define out feature class
+        feature_class_out = os.path.join(fgdb, feature_class)
+        print('\t\tfeature_class_out:\t\t{0}'.format(feature_class_out))
+        # Define GUID field
+        guid_field = feature_class + '_GUID'
         print('\t\tguid_field:\t\t{0}'.format(guid_field))
-        #
         # Add GUID field to output dataset
-        print('\t\tAdding GUID field {0}...'.format(guid_field))
+        print('\t\tAdding GUID field {0} to out feature class {1}...'.format(guid_field,
+                                                                             feature_class_out))
         # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
         # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
         # See:  http://support.esri.com/technical-article/000010006
-        arcpy.AddField_management(in_table=dataset_out,
+        arcpy.AddField_management(in_table=feature_class_out,
                                   field_name=guid_field,
                                   field_type='GUID',
                                   field_precision='#',
@@ -646,47 +592,125 @@ if add_guids:
                                   field_is_nullable='NULLABLE',  # field_is_nullable='NULLABLE',
                                   field_is_required='REQUIRED',
                                   field_domain='#')
-        print('\t\tAdded GUID field {0}.'.format(guid_field))
-        print('\t\tCalculating GUID field {0}...'.format(guid_field))
+        print('\t\tAdded GUID field {0} to out feature class {1}.'.format(guid_field,
+                                                                          feature_class_out))
+        print('\t\tCalculating GUID field {0} in out feature class {1}...'.format(guid_field,
+                                                                                  feature_class_out))
         code_block = '''def GUID():
             import uuid
             return \'{\' + str(uuid.uuid4()) + \'}\''''
-        arcpy.CalculateField_management(in_table=dataset_out,
+        arcpy.CalculateField_management(in_table=feature_class_out,
                                         field=guid_field,
                                         expression='GUID()',
                                         expression_type='PYTHON',
                                         code_block=code_block)
-        print('\t\tCalculated GUID field {0}.'.format(guid_field))
-        #
+        print('\t\tCalculated GUID field {0} in out feature class {1}.'.format(guid_field,
+                                                                               feature_class_out))
         # Add attribute index to newly added GUID field
-        print('\t\tAdding attribute index to GUID field {0}...'.format(guid_field))
+        print('\t\tAdding attribute index to GUID field {0} in out feature class {1}...'.format(guid_field,
+                                                                                                feature_class_out))
         index_name = guid_field + '_IDX'
-        if len(arcpy.ListIndexes(dataset=dataset_out,
+        if len(arcpy.ListIndexes(dataset=feature_class_out,
                                  wild_card=index_name)) > 0:
-            print('\t\t\tDeleting attribute index {0}...'.format(index_name))
-            arcpy.RemoveIndex_management(in_table=dataset_out,
+            print('\t\t\tDeleting attribute index {0} in out feature class {1}...'.format(index_name,
+                                                                                          feature_class_out))
+            arcpy.RemoveIndex_management(in_table=feature_class_out,
                                          index_name=index_name)
-            print('\t\t\tDeleted attribute index {0}.'.format(index_name))
-        arcpy.AddIndex_management(in_table=dataset_out,
+            print('\t\t\tDeleted attribute index {0} in out feature class {1}.'.format(index_name,
+                                                                                       feature_class_out))
+        arcpy.AddIndex_management(in_table=feature_class_out,
                                   fields=guid_field,
                                   index_name=index_name,
                                   unique='UNIQUE',
                                   ascending='NON_ASCENDING')
-        print('\t\tAdded attribute index to GUID field {0}.'.format(guid_field))
-        #
-        # Join GUIDs to related table
+        print('\t\tAdded attribute index to GUID field {0} in out feature class {1}.'.format(guid_field,
+                                                                                             feature_class_out))
+    del index_name, guid_field, feature_class_out, feature_class, feature_classes
+    print('Added GUID fields to feature classes.')
+    #
+    # Add GUID field to file geodatabase related tables
+    print('\n\nAdding GUID fields to related tables...')
+    related_tables = ['COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
+    for related_table in related_tables:
+        print('\trelated_table:\t\t{0}'.format(related_table))
+        # Define out related table
+        related_table_out = os.path.join(fgdb, related_table)
+        print('\t\trelated_table_out:\t\t{0}'.format(related_table_out))
+        # Define GUID field
+        guid_field = related_table + '_GUID'
+        print('\t\tguid_field:\t\t{0}'.format(guid_field))
+        # Add GUID field to output dataset
+        print('\t\tAdding GUID field {0} to out related table {1}...'.format(guid_field,
+                                                                             related_table_out))
+        # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
+        # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
+        # See:  http://support.esri.com/technical-article/000010006
+        arcpy.AddField_management(in_table=related_table_out,
+                                  field_name=guid_field,
+                                  field_type='GUID',
+                                  field_precision='#',
+                                  field_scale='#',
+                                  field_length='#',
+                                  field_alias='#',
+                                  field_is_nullable='NULLABLE',  # field_is_nullable='NULLABLE',
+                                  field_is_required='REQUIRED',
+                                  field_domain='#')
+        print('\t\tAdded GUID field {0} to out related table {1}.'.format(guid_field,
+                                                                          related_table_out))
+        print('\t\tCalculating GUID field {0} in out related table {1}...'.format(guid_field,
+                                                                                  related_table_out))
+        code_block = '''def GUID():
+            import uuid
+            return \'{\' + str(uuid.uuid4()) + \'}\''''
+        arcpy.CalculateField_management(in_table=related_table_out,
+                                        field=guid_field,
+                                        expression='GUID()',
+                                        expression_type='PYTHON',
+                                        code_block=code_block)
+        print('\t\tCalculated GUID field {0} in out related table {1}.'.format(guid_field,
+                                                                               related_table_out))
+        # Add attribute index to newly added GUID field
+        print('\t\tAdding attribute index to GUID field {0} in out related table {1}...'.format(guid_field,
+                                                                                                related_table_out))
+        index_name = guid_field + '_IDX'
+        if len(arcpy.ListIndexes(dataset=related_table_out,
+                                 wild_card=index_name)) > 0:
+            print('\t\t\tDeleting attribute index {0} in out related table {1}...'.format(index_name,
+                                                                                          related_table_out))
+            arcpy.RemoveIndex_management(in_table=related_table_out,
+                                         index_name=index_name)
+            print('\t\t\tDeleted attribute index {0} in out related table {1}.'.format(index_name,
+                                                                                       related_table_out))
+        arcpy.AddIndex_management(in_table=related_table_out,
+                                  fields=guid_field,
+                                  index_name=index_name,
+                                  unique='UNIQUE',
+                                  ascending='NON_ASCENDING')
+        print('\t\tAdded attribute index to GUID field {0} in out related table {1}.'.format(guid_field,
+                                                                                             related_table_out))
+    del index_name, guid_field, related_table_out, related_table, related_tables
+    print('Added GUID fields to related tables.')
+    #
+    # Join GUIDs to related table
+    print('\n\nJoining GUID fields to related tables...')
+    datasets = ['SCPTDATA', 'LINEARDATA', 'EVENTDATA', 'POINTDATA']
+    for dataset in datasets:
+        print('\t\tdataset:\t\t{0}'.format(dataset))
+        # Define out dataset
+        dataset_out = os.path.join(fgdb, dataset)
+        print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
-        #
         #  Define output related table path
         related_table_out = os.path.join(fgdb, related_table)
         print('\t\t\trelated_table_out:\t\t{0}'.format(related_table_out))
-        #
         # Get ID field from data dictionary
         id_field = data_dictionary[dataset]['id_field']
         print('\t\t\tid_field:\t\t{0}'.format(id_field))
-        #
+        # Define GUID field to join
+        guid_field = dataset + '_GUID'
+        print('\t\tguid_field:\t\t{0}'.format(guid_field))
         # Add GUID field to file geodatabase tables
         print('\t\t\tAdding GUID field to related table...')
         print('\t\t\t\tin_data={0}'.format(related_table_out))
@@ -699,25 +723,29 @@ if add_guids:
                                    join_table=dataset_out,
                                    join_field=id_field,
                                    fields=[guid_field])
-        print('\t\t\tAdded GUID fields to related tables.')
+        print('\t\t\tAdded GUID field to related tables.')
         #
         # Add attribute index to newly joined GUID field
-        print('\t\t\tAdding attribute index to GUID field {0}...'.format(guid_field))
+        print('\t\t\tAdding attribute index to GUID field {0} in related table {1}...'.format(guid_field,
+                                                                                              related_table_out))
         index_name = guid_field + '_IDX'
         if len(arcpy.ListIndexes(dataset=related_table_out,
                                  wild_card=index_name)) > 0:
-            print('\t\t\t\tDeleting attribute index {0}...'.format(index_name))
+            print('\t\t\t\tDeleting attribute index {0} in related table {1}...'.format(index_name,
+                                                                                        related_table_out))
             arcpy.RemoveIndex_management(in_table=related_table_out,
                                          index_name=index_name)
-            print('\t\t\t\tDeleted attribute index {0}.'.format(index_name))
+            print('\t\t\t\tDeleted attribute index {0} in related table {1}.'.format(index_name,
+                                                                                     related_table_out))
         arcpy.AddIndex_management(in_table=related_table_out,
                                   fields=guid_field,
                                   index_name=index_name,
                                   unique='UNIQUE',
                                   ascending='NON_ASCENDING')
-        print('\t\t\tAdded attribute index to GUID field {0}.'.format(guid_field))
-    #
-    print('Added GUID fields to datasets.')
+        print('\t\t\tAdded attribute index to GUID field {0} in related table {1}.'.format(guid_field,
+                                                                                           related_table_out))
+    del index_name, guid_field, id_field, related_table_out, related_table, dataset_out, dataset, datasets
+    print('Joined GUID fields to related tables.')
 
 
 check_guids = True
@@ -822,6 +850,9 @@ if check_guids:
         time.sleep(1)
         #
     print('\n\nChecked GUID fields in related datasets.' + '\n' * 5)
+
+
+sys.exit()
 
 
 create_relationship_classes = True
