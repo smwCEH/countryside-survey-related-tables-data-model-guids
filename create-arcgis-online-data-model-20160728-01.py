@@ -209,7 +209,7 @@ print('\t{0}'.format(alias))
 print('\t#\nCreated dictionary to hold field aliases.')
 
 
-copy_datasets = False
+copy_datasets = True
 
 
 if copy_datasets:
@@ -560,7 +560,10 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-add_guids = False
+sys.exit()
+
+
+add_guids = True
 
 
 if add_guids:
@@ -753,7 +756,7 @@ check_guids = True
 
 if check_guids:
     # Checking GUID fields in related file geodatabase datasets
-    print('\n' * 5 + 'Checking GUID fields in related datasets...')
+    print('\n\nChecking GUID fields in related datasets...')
     #
     # Set sample size
     sample_size = 25
@@ -849,10 +852,7 @@ if check_guids:
         #
         time.sleep(1)
         #
-    print('\n\nChecked GUID fields in related datasets.' + '\n' * 5)
-
-
-sys.exit()
+    print('\n\nChecked GUID fields in related datasets.')
 
 
 create_relationship_classes = True
@@ -863,23 +863,18 @@ if create_relationship_classes:
     print('\n\nCreating relationship classes...')
     for dataset in data_dictionary.keys():
         print('\tdataset:\t\t{0}'.format(dataset))
-        #
         # Define output dataset
         dataset_out = os.path.join(fgdb, dataset)
         print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-        #
         # Get related table from data dictionary
         related_table = data_dictionary[dataset]['related_table']
-        # print('\t\trelated_table:\t\t{0}'.format(related_table))
-        #
+        print('\t\trelated_table:\t\t{0}'.format(related_table))
         # Get related table from data dictionary
         guid_field = data_dictionary[dataset]['guid_field']
-        print('\t\tguid_field:\t\t{0}'.format(guid_field))
-        #
+        print('\t\tguid_field:\t\t\t{0}'.format(guid_field))
         # Define output related table path
         related_table_out = os.path.join(fgdb, related_table)
         print('\t\trelated_table_out:\t\t{0}'.format(related_table_out))
-        #
         #  Create relationship class
         print('\t\tCreating relationship class...')
         print('\t\t\torigin_table:\t\t\t\t{0}'.format(dataset_out))
@@ -900,9 +895,9 @@ if create_relationship_classes:
         print('\t\t\tattributed:\t\t\t\t\t{0}'.format(attributed))
         origin_primary_key = guid_field
         print('\t\t\torigin_primary_key:\t\t\t{0}'.format(origin_primary_key))
-        origin_foreign_key = ''
+        origin_foreign_key = guid_field
         print('\t\t\torigin_foreign_key:\t\t\t{0}'.format(origin_foreign_key))
-        destination_primary_key = guid_field
+        destination_primary_key = ''
         print('\t\t\tdestination_primary_key:\t{0}'.format(destination_primary_key))
         destination_foreign_key = ''
         print('\t\t\tdestination_foreign_key:\t{0}'.format(destination_foreign_key))
@@ -929,12 +924,12 @@ if create_relationship_classes:
                                                  origin_foreign_key=origin_foreign_key,
                                                  destination_primary_key=destination_primary_key,
                                                  destination_foreign_key=destination_foreign_key)
-        print('\t\tCreating relationship class...')
+        print('\t\tCreated relationship class.')
     #
     print('Creating relationship classes...')
 
 
-copy_domains = True
+copy_domains = False
 
 
 if copy_domains:
