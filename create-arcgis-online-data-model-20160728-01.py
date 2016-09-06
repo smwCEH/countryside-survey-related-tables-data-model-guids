@@ -56,20 +56,23 @@ arcpy.env.overwriteOutput = True
 #     print('\t{0:<30}:\t{1}'.format(environment, arcpy.env[environment]))
 
 
-# Define ArcSDE path
-# arcsde = r'Database Connections\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-arcsde = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-print('\n\narcsde:\t\t{0}'.format(arcsde))
+# Define ArcSDE path for original CS2007 geodatabase
+arcsde_cs_original = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
+print('\n\narcsde_cs_original:\t\t{0}'.format(arcsde_cs_original))
+# Define ArcSDE user for original CS2007 geodatabase
+arcsde_user_cs_original = r'CSADMIN'
+print('arcsde_user_cs_original:\t\t{0}'.format(arcsde_user_cs_original))
 
 
-# Define ArcSDE user
-arcsde_user = r'CS2007_ADMIN'
-print('\n\narcsde_user:\t\t{0}'.format(arcsde_user))
-
-
-# Define ArcSDE feature dataset
-arcsde_fd = r'ForesterData'
-print('\n\narcsde_fd:\t\t{0}'.format(arcsde_fd))
+# Define ArcSDE path for restored CS2007 geodatabase
+arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
+# Define ArcSDE user for restored CS2007 geodatabase
+arcsde_user_cs_restored = r'CS2007_ADMIN'
+print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
+# Define ArcSDE feature dataset for restored CS2007 geodatabase
+arcsde_feature_dataset_cs_restored = r'ForesterData'
+print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
 
 
 # Define file geodatabase
@@ -120,7 +123,8 @@ print('\n\nCreating dictionary to hold field aliases...')
 field_alias_dictionary = collections.OrderedDict()
 field_alias_dictionary['BLKDATA'] = {}
 field_alias_dictionary['BLKDATA']['BLK'] = 'CS Square'
-sm_table_item_table = arcsde + '\\' + arcsde_user + '.' + 'SM_TABLE_ITEM'
+sm_table_item_table = arcsde_cs_restored + '\\' +\
+                      arcsde_user_cs_restored + '.' + 'SM_TABLE_ITEM'
 print('\t#\n\tsm_table_item_table:\t\t{0}'.format(sm_table_item_table))
 for dataset in data_dictionary.keys():
     if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Ignore EVENTDATA related table as will queried as the related table of the LINEARDATA feature class
@@ -219,7 +223,10 @@ if copy_datasets:
     # Copy the BLKDATA feature class
     # Define input_dataset
     dataset = r'BLKDATA'
-    dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
+    dataset_in = arcsde_cs_restored + '\\' +\
+                 arcsde_user_cs_restored + '.' +\
+                 arcsde_feature_dataset_cs_restored + '\\' +\
+                 dataset
     #Define output dataset
     dataset_out = os.path.join(fgdb, dataset)
     #  Display input and output dataset paths
@@ -243,7 +250,7 @@ if copy_datasets:
     print('\t\tListing fields in out feature class and creating in new feature class...')
     fields = arcpy.ListFields(dataset_in)
     for field in fields:
-        if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN']:
+        if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN', 'BLKDATA_GUID']:
             print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
                                                                            field.type,
                                                                            field.length))
@@ -265,7 +272,7 @@ if copy_datasets:
     print('\t\tAppending rows from in feature class to out feature class...')
     arcpy.Append_management(inputs=[dataset_in],
                             target=dataset_out,
-                            schema_type='TEST')
+                            schema_type='NO_TEST')
     print('\t\tAppended rows from in feature class to out feature class.')
     #
     # Delete non-CS2007 fields from BLKDATA feature class
@@ -306,10 +313,19 @@ if copy_datasets:
         print('\tdataset:\t\t{0}'.format(dataset))
         #
         # Define input dataset
-        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user + '.' + arcsde_fd + '\\' + dataset
+        if dataset in ('SCPTDATA', 'LINEARDATA'):
+            dataset_in = arcsde_cs_restored + '\\' +\
+                         arcsde_user_cs_restored + '.' +\
+                         arcsde_feature_dataset_cs_restored + '\\' +\
+                         dataset
+        elif dataset in ('POINTDATA'):
+            dataset_in = arcsde_cs_original + '\\' +\
+                         arcsde_user_cs_original + '.' +\
+                         dataset
         elif dataset in ('EVENTDATA'):
-            dataset_in = arcsde + '\\' + arcsde_user + '.' + dataset
+            dataset_in = arcsde_cs_restored + '\\' +\
+                         arcsde_user_cs_restored + '.' +\
+                         dataset
         else:
             sys.exit('\n\ndataset {0} not coded for!!!\n\n'.format(dataset))
         #
@@ -429,7 +445,14 @@ if copy_datasets:
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         #
         #  Define input related table
-        related_table_in = arcsde + '\\' + arcsde_user +'.' + related_table
+        if related_table in ('PCOMPDATA'):
+            related_table_in = arcsde_cs_original + '\\' +\
+                               arcsde_user_cs_original +'.' +\
+                               related_table
+        else:
+            related_table_in = arcsde_cs_restored + '\\' +\
+                               arcsde_user_cs_restored + '.' +\
+                               related_table
         #
         #  Define output related table
         related_table_out = os.path.join(fgdb, related_table)
@@ -610,6 +633,16 @@ if add_guids:
         # Add GUID field to output dataset
         print('\t\tAdding GUID field {0} to out feature class {1}...'.format(guid_field,
                                                                              feature_class_out))
+        if arcpy.ListFields(dataset=feature_class_out,
+                            wild_card=guid_field):
+            print('\t\t\tGUID field {0} already exists in out feature class {1}.'.format(guid_field,
+                                                                                     feature_class_out))
+            print('\t\t\tDeleting GUID field {0} in out feature class {1}...'.format(guid_field,
+                                                                                 feature_class_out))
+            arcpy.DeleteField_management(in_table=feature_class_out,
+                                         drop_field=[guid_field])
+            print('\t\t\tDeleted GUID field {0} in out feature class {1}.'.format(guid_field,
+                                                                              feature_class_out))
         # Note that fields with Allow NULL Values = NO can only be added to empty feature classes or tables
         # Therefore, field_is_nullable parameter must be set to 'NULLABLE'
         # See:  http://support.esri.com/technical-article/000010006
@@ -741,7 +774,7 @@ if add_guids:
         print('\t\t\tid_field:\t\t{0}'.format(id_field))
         # Define GUID field to join
         guid_field = dataset + '_GUID'
-        print('\t\tguid_field:\t\t{0}'.format(guid_field))
+        print('\t\t\tguid_field:\t\t{0}'.format(guid_field))
         # Add GUID field to file geodatabase tables
         print('\t\t\tAdding GUID field to related table...')
         print('\t\t\t\tin_data={0}'.format(related_table_out))
@@ -1018,7 +1051,8 @@ if copy_domains:
             # Add additional HABT_CODES to the CS2007_HABT_CODE table
             if domain.name == 'CS2007_HABT_CODE':
                 print('\t#\n\tAdding additional domain values to {0} table...'.format(table_out))
-                habt_code_table = arcsde + '\\' + arcsde_user + '.' + 'HABITATS'
+                habt_code_table = arcsde_cs_restored + '\\' +\
+                                  arcsde_user_cs_restored + '.' + 'HABITATS'
                 print('\t\thabt_code_table:\t\t{0}'.format(habt_code_table))
                 a = list(range(10070, 10077))
                 b = list(range(601, 613))
@@ -1053,7 +1087,8 @@ if copy_domains:
             # Add additional SPECIES to the CS2007_SPECIES table
             if domain.name == 'CS2007_SPECIES':
                 print('\t#\n\tAdding additional domain values to {0} table...'.format(table_out))
-                fecodes_table = arcsde + '\\' + arcsde_user + '.' + 'FECODES'
+                fecodes_table = arcsde_cs_restored + '\\' + \
+                                arcsde_user_cs_restored + '.' + 'FECODES'
                 print('\t\tfecodes_table:\t\t{0}'.format(fecodes_table))
                 where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
                                                   '\'SPECIES\'')
