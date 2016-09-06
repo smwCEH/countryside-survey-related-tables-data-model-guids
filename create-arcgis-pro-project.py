@@ -126,6 +126,9 @@ map.addTable(add_table=table)
 # map.camera.setExtent(arcpy.Extent(0.0, 0.0, 700000.0, 1300000.0))
 
 
+
+
+
 aprx.save()
 
 
