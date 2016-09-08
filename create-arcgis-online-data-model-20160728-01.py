@@ -445,7 +445,7 @@ if copy_datasets:
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         #
         #  Define input related table
-        if related_table in ('PCOMPDATA'):
+        if related_table == 'PCOMPDATA':
             related_table_in = arcsde_cs_original + '\\' +\
                                arcsde_user_cs_original +'.' +\
                                related_table
@@ -610,6 +610,46 @@ if copy_datasets:
                                     expression_type='PYTHON',
                                     code_block='#')
     print('\tCalculated Linear_Length.')
+
+    #
+    # Add CONDITION, DISEASE_SIGNS and HABITAT_BOXES fields to PCOMPDATA related table
+    print('\tAdding CONDITION field to PCOMPDATA related table...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
+                              field_name='CONDITION',
+                              field_type='SHORT',
+                              field_precision=3,
+                              field_scale='',
+                              field_length='',
+                              field_alias='Condition',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdded CONDITION field to PCOMPDATA feature class.')
+    print('\tAdding DISEASE_SIGNS field to PCOMPDATA related table...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
+                              field_name='DISEASE_SIGNS',
+                              field_type='SHORT',
+                              field_precision=3,
+                              field_scale='',
+                              field_length='',
+                              field_alias='Signs of disease',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdded DISEASE_SIGNS field to PCOMPDATA feature class.')
+    print('\tAdding HABITAT_BOXES field to PCOMPDATA related table...')
+    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
+                              field_name='HABITAT_BOXES',
+                              field_type='SHORT',
+                              field_precision=3,
+                              field_scale='',
+                              field_length='',
+                              field_alias='Habitat boxes',
+                              field_is_nullable='NULLABLE',
+                              field_is_required='NON_REQUIRED',
+                              field_domain='')
+    print('\tAdded HABITAT_BOXES field to PCOMPDATA feature class.')
+
     #
     print('Copied datasets.')
 
