@@ -1033,6 +1033,11 @@ if create_relationship_classes:
 copy_domains = True
 
 
+# TODO - re-create domains from WGEM schema to get must up-to-date values for selected fields
+# TODO - (e.g. PRIMARY_QUALIFYER values of Burnt Vegetation (< 2 years) and Burnt Vegetation (< 2 years) instead of Burnt Vegetation) and additional values of Lowland Marshy Grassland and Calaminaria Grassland)
+# TODO - (e.g. SWARD_COVER, SWARD_HEIGHT, SWARD_VARIATION and TUSSOCKINESS which aren't CS fields but are WGEM fields)
+
+
 if copy_domains:
     print('\n\nCopying domains and applying to fields...')
     #
