@@ -75,6 +75,17 @@ arcsde_feature_dataset_cs_restored = r'ForesterData'
 print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
 
 
+# Define ArcSDE path for restored CS2007 geodatabase
+arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
+# Define ArcSDE user for restored CS2007 geodatabase
+arcsde_user_cs_restored = r'CS2007_ADMIN'
+print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
+# Define ArcSDE feature dataset for restored CS2007 geodatabase
+arcsde_feature_dataset_cs_restored = r'ForesterData'
+print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
+
+
 # Define file geodatabase
 # fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 # fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160714.gdb'
