@@ -56,75 +56,189 @@ arcpy.env.overwriteOutput = True
 #     print('\t{0:<30}:\t{1}'.format(environment, arcpy.env[environment]))
 
 
-# Define ArcSDE path for original CS2007 geodatabase
-arcsde_cs_original = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
-print('\n\narcsde_cs_original:\t\t{0}'.format(arcsde_cs_original))
-# Define ArcSDE user for original CS2007 geodatabase
-arcsde_user_cs_original = r'CSADMIN'
-print('arcsde_user_cs_original:\t\t{0}'.format(arcsde_user_cs_original))
+# # Define ArcSDE path and user for original CS2007 geodatabase
+# arcsde_cs_original = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
+# arcsde_user_cs_original = r'CSADMIN'
+# print('\n\narcsde_cs_original:\t\t{0}'.format(arcsde_cs_original))
+# print('arcsde_user_cs_original:\t\t{0}'.format(arcsde_user_cs_original))
+#
+#
+# # Define ArcSDE path, user and feature dataset for restored CS2007 geodatabase
+# arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+# arcsde_user_cs_restored = r'CS2007_ADMIN'
+# arcsde_feature_dataset_cs_restored = r'ForesterData'
+# print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
+# print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
+# print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
+#
+#
+# # Define ArcSDE path, user and feature dataset for WGEM geodatabase
+# arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
+# arcsde_user_cs_restored = r'WGEMADMIN'
+# arcsde_feature_dataset_cs_restored = r'ForesterData'
+# print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
+# print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
+# print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
 
 
-# Define ArcSDE path for restored CS2007 geodatabase
-arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
-# Define ArcSDE user for restored CS2007 geodatabase
-arcsde_user_cs_restored = r'CS2007_ADMIN'
-print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
-# Define ArcSDE feature dataset for restored CS2007 geodatabase
-arcsde_feature_dataset_cs_restored = r'ForesterData'
-print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
+# Define sde dictionary for holding ArcSDE parameters
+sde_dictionary = collections.OrderedDict()
+sde_dictionary['CS_ORIGINAL'] = {}
+sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
+sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
+sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
+sde_dictionary['CS_RESTORED'] = {}
+sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
+sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
+sde_dictionary['WGEM'] = {}
+sde_dictionary['WGEM']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
+sde_dictionary['WGEM']['user'] = r'WGEMADMIN'
+sde_dictionary['WGEM']['FeatureDataset'] = r'ForesterData'
+#
+# Print sde_dictionary
+print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
+                                                   sort_keys=False,
+                                                   indent=4)))
 
 
-# Define ArcSDE path for restored CS2007 geodatabase
-arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
-# Define ArcSDE user for restored CS2007 geodatabase
-arcsde_user_cs_restored = r'CS2007_ADMIN'
-print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
-# Define ArcSDE feature dataset for restored CS2007 geodatabase
-arcsde_feature_dataset_cs_restored = r'ForesterData'
-print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
+
+# Define data dictionary for holding feature class and related table parameters
+data_dictionary = collections.OrderedDict()
+data_dictionary['BLKDATA'] = {}
+data_dictionary['BLKDATA']['type'] = 'FeatureClass'
+data_dictionary['BLKDATA']['id_field'] = 'BLKDATA_ID'
+data_dictionary['BLKDATA']['guid_field'] = 'BLKDATA_GUID'
+data_dictionary['BLKDATA']['related_table'] = None
+data_dictionary['SCPTDATA'] = {}
+data_dictionary['SCPTDATA']['type'] = 'FeatureClass'
+data_dictionary['SCPTDATA']['id_field'] = 'SCPTDATA_ID'
+data_dictionary['SCPTDATA']['guid_field'] = 'SCPTDATA_GUID'
+data_dictionary['SCPTDATA']['related_table'] = 'COMPDATA'
+data_dictionary['POINTDATA'] = {}
+data_dictionary['POINTDATA']['type'] = 'FeatureClass'
+data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
+data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
+data_dictionary['POINTDATA']['related_table'] = 'PCOMPDATA'
+data_dictionary['LINEARDATA'] = {}
+data_dictionary['LINEARDATA']['type'] = 'FeatureClass'
+data_dictionary['LINEARDATA']['id_field'] = 'LINEARDATA_ID'
+data_dictionary['LINEARDATA']['guid_field'] = 'LINEARDATA_GUID'
+data_dictionary['LINEARDATA']['related_table'] = 'EVENTDATA'
+data_dictionary['EVENTDATA'] = {}
+data_dictionary['EVENTDATA']['type'] = 'Table'
+data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
+data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
+data_dictionary['EVENTDATA']['related_table'] = 'SEVENTDATA'
+#
+# Print data_dictionary
+print('\n\ndata_dictionary:\n{0}'.format(json.dumps(data_dictionary,
+                                                    sort_keys=False,
+                                                    indent=4)))
 
 
 # Define file geodatabase
-# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
-# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160714.gdb'
-# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-20160715.gdb'
-# fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{0}-with-nullable-fields.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
-fgdb = r'E:\CountrysideSurvey\esri-uk\guids\guids-{0}-without-nullable-fields.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+fgdb = r'E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 print('\n\nfgdb:\t\t\{0}'.format(fgdb))
 
 
-# Create file geodatabase if it doesn't exist
+# Create file geodatabase if it doesn't already exist
 if not arcpy.Exists(dataset=fgdb):
     arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb),
                                    out_name=os.path.basename(fgdb),
                                    out_version='')
 
 
-# data_dictionary = {}
-data_dictionary = collections.OrderedDict()
-data_dictionary['SCPTDATA'] = {}
-data_dictionary['SCPTDATA']['id_field'] = 'SCPTDATA_ID'
-data_dictionary['SCPTDATA']['guid_field'] = 'SCPTDATA_GUID'
-data_dictionary['SCPTDATA']['related_table'] = 'COMPDATA'
-data_dictionary['POINTDATA'] = {}
-data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
-data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
-data_dictionary['POINTDATA']['related_table'] = 'PCOMPDATA'
-data_dictionary['LINEARDATA'] = {}
-data_dictionary['LINEARDATA']['id_field'] = 'LINEARDATA_ID'
-data_dictionary['LINEARDATA']['guid_field'] = 'LINEARDATA_GUID'
-data_dictionary['LINEARDATA']['related_table'] = 'EVENTDATA'
-data_dictionary['EVENTDATA'] = {}
-data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
-data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
-data_dictionary['EVENTDATA']['related_table'] = 'SEVENTDATA'
-#
-# Print data_dictionary
-print(json.dumps(data_dictionary,
-                 sort_keys=False,
-                 indent=4))
+copy_datasets = True
+
+
+if copy_datasets:
+    print('\n\nCopying datasets...')
+    #
+    for sde in sde_dictionary.keys():
+        print('\t{0}'.format(sde))
+        for dataset in data_dictionary.keys():
+            #
+            print('\t\t{0}'.format(dataset))
+            # Define in dataset
+            if sde_dictionary[sde]['FeatureDataset'] == None:
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
+                             '\\' +\
+                             dataset
+            elif data_dictionary[dataset]['type'] == 'Table':
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
+                             '\\' +\
+                             dataset
+            elif data_dictionary[dataset]['type'] == 'FeatureClass':
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
+                             '\\' +\
+                             sde_dictionary[sde]['user'] +\
+                             '.' +\
+                             sde_dictionary[sde]['FeatureDataset'] +\
+                             '\\' +\
+                             dataset
+            else:
+                sys.exit('\n\nNot coded for!!!\nCannot determine dataset_in!!!\n')
+            print('\t\t\tdataset_in:\t\t\t{0}'.format(dataset_in))
+            desc = arcpy.Describe(dataset_in)
+            dataType = desc.dataType
+            print('\t\t\tdataType:\t\t\t{0}'.format(dataType))
+            try:
+                shapeType = desc.shapeType
+            except AttributeError:
+                shapeType = None
+            print('\t\t\tshapeType:\t\t\t{0}'.format(shapeType))
+            # Define out dataset
+            dataset_out = sde + '_' + dataset
+            dataset_out = os.path.join(fgdb, dataset_out)
+            print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
+            if arcpy.Exists(dataset=dataset_out):
+                arcpy.Delete_management(in_data=dataset_out,
+                                        data_type=data_dictionary[dataset]['type'])
+            if data_dictionary[dataset]['type'] == 'FeatureClass':
+                # Create empty feature class
+                arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
+                                                    out_name=os.path.basename(dataset_out),
+                                                    geometry_type=shapeType,
+                                                    template=dataset_in,
+                                                    spatial_reference=arcpy.SpatialReference(27700))
+            elif data_dictionary[dataset]['type'] == 'Table':
+                # Create empty table
+                arcpy.CreateTable_management(out_path=os.path.dirname(dataset_out),
+                                             out_name=os.path.basename(dataset_out),
+                                             template=dataset_in)
+            else:
+                sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
+            # Create empty related table
+            if dataset not in ('BLKDATA', 'LINEARDATA'):
+                # Define in related table
+                related_table_in = sde_dictionary[sde]['connection_file'] + \
+                                   '\\' + \
+                                   data_dictionary[dataset]['related_table']
+                print('\t\t\trelated_table_in:\t{0}'.format(related_table_in))
+                # Define out related table
+                related_table_out = sde + '_' + data_dictionary[dataset]['related_table']
+                related_table_out = os.path.join(fgdb, related_table_out)
+                print('\t\t\trelated_table_out:\t{0}'.format(related_table_out))
+                if arcpy.Exists(dataset=related_table_out):
+                    arcpy.Delete_management(in_data=related_table_out,
+                                            data_type='Table')
+                # Create empty table
+                arcpy.CreateTable_management(out_path=os.path.dirname(related_table_out),
+                                             out_name=os.path.basename(related_table_out),
+                                             template=related_table_in)
+
+
+
+
+    #
+    print('Copied datasets.')
+
+
+
+
+sys.exit()
+
 
 
 # Create dictionary to hold field aliases
