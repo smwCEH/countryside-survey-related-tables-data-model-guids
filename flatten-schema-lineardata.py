@@ -148,23 +148,23 @@ del fc_out_fields
 
 
 # Add linears to fc_out using arcpy.da.InsertCursor()
-cursor = arcpy.da.InsertCursor(fc_out, ['SHAPE@', 'VISIT_STATUS'])
-array = arcpy.Array([arcpy.Point(357150, 532150),
-                     arcpy.Point(357300, 532300)])
-polyline = arcpy.Polyline(array)
-cursor.insertRow((polyline, 1))
-array = arcpy.Array([arcpy.Point(357150, 532200),
-                     arcpy.Point(357300, 532350)])
-polyline = arcpy.Polyline(array)
-cursor.insertRow((polyline, 2))
-array = arcpy.Array([arcpy.Point(357150, 532250),
-                     arcpy.Point(357300, 532400)])
-polyline = arcpy.Polyline(array)
-cursor.insertRow((polyline, 3))
-array = arcpy.Array([arcpy.Point(357150, 532300),
-                     arcpy.Point(357300, 532450)])
-polyline = arcpy.Polyline(array)
-cursor.insertRow((polyline, None))
+cursor = arcpy.da.InsertCursor(fc_out, ['SHAPE@', 'LUSE', 'VISIT_STATUS'])
+LUSE_List = ['AN', 'B', 'CF', 'DF', 'F', 'FO', 'GS', 'HF',\
+             'IL', 'IW', 'ST', 'TR', 'W', 'WNS', 'WUS', 'US']
+start_point_x, start_point_y = 357150.0, 532150.0
+point_x, point_y = start_point_x, start_point_y
+line_length = 150.0
+VISIT_STATUS = 1
+for LUSE in LUSE_List:
+    if VISIT_STATUS > 4:
+        VISIT_STATUS = 1
+    array = arcpy.Array([arcpy.Point(point_x, point_y),
+                         arcpy.Point(point_x + line_length, point_y + line_length)])
+    polyline = arcpy.Polyline(array)
+    cursor.insertRow((polyline, LUSE, None if VISIT_STATUS == 4 else VISIT_STATUS))
+    VISIT_STATUS += 1
+    point_x += 0.0
+    point_y += 50.0
 del cursor
 
 
