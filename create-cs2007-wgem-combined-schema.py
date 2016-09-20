@@ -87,14 +87,17 @@ sde_dictionary['CS_ORIGINAL'] = {}
 sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
 sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
 sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
+sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
 sde_dictionary['CS_RESTORED'] = {}
 sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
 sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
 sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
+sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
 sde_dictionary['WGEM'] = {}
 sde_dictionary['WGEM']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
 sde_dictionary['WGEM']['user'] = r'WGEMADMIN'
 sde_dictionary['WGEM']['FeatureDataset'] = r'ForesterData'
+sde_dictionary['WGEM']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA', 'POINTDATA', 'PCOMPDATA']
 #
 # Print sde_dictionary
 print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
@@ -108,6 +111,8 @@ data_dictionary['BLKDATA'] = {}
 data_dictionary['BLKDATA']['type'] = 'Feature Class'
 data_dictionary['BLKDATA']['id_field'] = 'BLKDATA_ID'
 data_dictionary['BLKDATA']['guid_field'] = 'BLKDATA_GUID'
+data_dictionary['BLKDATA']['child_table'] = None
+data_dictionary['BLKDATA']['parent_table'] = None
 data_dictionary['BLKDATA']['drop_fields'] = ['EXTENT', 'FOREST', 'CREATE_ID']
 data_dictionary['SCPTDATA'] = {}
 data_dictionary['SCPTDATA']['type'] = 'Feature Class'
@@ -117,6 +122,8 @@ data_dictionary['SCPTDATA']['drop_fields'] = ['SCPT', 'FORP', 'COVA', 'COFC', 'H
                                               'CULT', 'GRAZED_SWARD', 'CANOPY_FRAGMENTATION', 'MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'MAPCODE_HA', 'CPMT', 'BLK',
                                               'FOREST', 'ALTD', 'THIN_STATUS', 'INVALID_THIN', 'CPTDATA_ID', 'THINCOUPE_ID', 'CREATE_ID', 'CANOPY_COVERP', 'NATIVE_SPIS_IN_CANOPYP', 'SEMI_NATURALP',
                                               'PLANTEDP', 'POACHED_GROUND', 'SPATIAL_ERROR']
+data_dictionary['SCPTDATA']['child_table'] = 'COMPDATA'
+data_dictionary['SCPTDATA']['parent_table'] = None
 data_dictionary['COMPDATA'] = {}
 data_dictionary['COMPDATA']['type'] = 'Table'
 data_dictionary['COMPDATA']['id_field'] = 'COMPDATA_ID'
@@ -126,31 +133,43 @@ data_dictionary['COMPDATA']['drop_fields'] = ['SCPT', 'SPIS', 'ORIG', 'PROP', 'R
                                               'FOREST', 'STRY', 'YLDC', 'SPNUM', 'THCY', 'DFST', 'DNXT', 'VOLP', 'VOLT', 'DBHP',
                                               'CREATE_ID', 'COMP_NUM', 'SPACING', 'WHCL', 'DBH_CLASS', 'FIRST_GRADEP', 'SECOND_GRADEP', 'THIRD_GRADEP', 'WOODLAND_LOSS_TYPE', 'WOODLAND_LOSS_CAUSE',
                                               'BROWSING_RATE', 'BROWSELINE', 'BASAL_SHOOTS']
+data_dictionary['COMPDATA']['child_table'] = None
+data_dictionary['COMPDATA']['parent_table'] = 'SCPTDATA'
 data_dictionary['LINEARDATA'] = {}
 data_dictionary['LINEARDATA']['type'] = 'Feature Class'
 data_dictionary['LINEARDATA']['id_field'] = 'LINEARDATA_ID'
 data_dictionary['LINEARDATA']['guid_field'] = 'LINEARDATA_GUID'
 data_dictionary['LINEARDATA']['drop_fields'] = ['BLKDATA_ID', 'CREATE_ID']
+data_dictionary['LINEARDATA']['child_table'] = 'EVENTDATA'
+data_dictionary['LINEARDATA']['parent_table'] = None
 data_dictionary['EVENTDATA'] = {}
 data_dictionary['EVENTDATA']['type'] = 'Table'
 data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
 data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
 data_dictionary['EVENTDATA']['drop_fields'] = ['MAPCODE_BD', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID']
+data_dictionary['EVENTDATA']['child_table'] = 'SEVENTDATA'
+data_dictionary['EVENTDATA']['parent_table'] = 'LINEARDATA'
 data_dictionary['SEVENTDATA'] = {}
 data_dictionary['SEVENTDATA']['type'] = 'Table'
 data_dictionary['SEVENTDATA']['id_field'] = 'SEVENTDATA_ID'
 data_dictionary['SEVENTDATA']['guid_field'] = 'SEVENTDATA_GUID'
 data_dictionary['SEVENTDATA']['drop_fields'] = ['CREATE_ID']
+data_dictionary['SEVENTDATA']['child_table'] = None
+data_dictionary['SEVENTDATA']['parent_table'] = 'EVENTDATA'
 data_dictionary['POINTDATA'] = {}
 data_dictionary['POINTDATA']['type'] = 'Feature Class'
 data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
 data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
 data_dictionary['POINTDATA']['drop_fields'] = ['MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID', 'CPTDATA_ID']
+data_dictionary['POINTDATA']['child_table'] = 'PCOMPDATA'
+data_dictionary['POINTDATA']['parent_table'] = None
 data_dictionary['PCOMPDATA'] = {}
 data_dictionary['PCOMPDATA']['type'] = 'Table'
 data_dictionary['PCOMPDATA']['id_field'] = 'PCOMPDATA_ID'
 data_dictionary['PCOMPDATA']['guid_field'] = 'PCOMPDATA_GUID'
 data_dictionary['PCOMPDATA']['drop_fields'] = ['CREATE_ID']
+data_dictionary['PCOMPDATA']['child_table'] = None
+data_dictionary['PCOMPDATA']['parent_table'] = 'POINTDATA'
 #
 # Print data_dictionary
 print('\n\ndata_dictionary:\n{0}'.format(json.dumps(data_dictionary,
@@ -170,6 +189,11 @@ if not arcpy.Exists(dataset=fgdb):
                                    out_version='')
 
 
+# Define BritishNationalGrid_100km feature class
+bng_100km = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB CEHCORP CORPADMIN.sde\CORPADMIN.BritishNationalGrid_100km'
+print('\n\nbng_100km:\t\t{0}'.format(bng_100km))
+
+
 copy_datasets = True
 
 
@@ -178,8 +202,7 @@ if copy_datasets:
     #
     for sde in sde_dictionary.keys():
         print('\t{0}'.format(sde))
-        for dataset in data_dictionary.keys():
-            #
+        for dataset in sde_dictionary[sde]['copy_datasets']:
             print('\t\t{0}'.format(dataset))
             # Define in dataset
             if sde_dictionary[sde]['FeatureDataset'] == None:
@@ -234,23 +257,95 @@ if copy_datasets:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
             # Append data from in dataset to out dataset
             print('\t\t\tAppending rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
-                                                                                dataset_in,
-                                                                                dataset_out))
+                                                                                  dataset_in,
+                                                                                  dataset_out))
             arcpy.Append_management(inputs=[dataset_in],
                                     target=dataset_out,
                                     schema_type='NO_TEST')
             print('\t\t\tAppended rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
-                                                                               dataset_in,
-                                                                               dataset_out))
+                                                                                 dataset_in,
+                                                                                 dataset_out))
             result = arcpy.GetCount_management(dataset_out)
             count = int(result.getOutput(0))
             print('\t\t\tCount:\t\t{0}'.format(count))
-            ## Delete non-CS2007 fields from BLKDATA feature class
-            print('\t\t\tDeleting non-CS2007 fields from BLKDATA feature class...')
+            # Delete non-CS2007 fields from BLKDATA feature class
+            print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'],
+                                                                                dataset_out))
             print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
             arcpy.DeleteField_management(in_table=dataset_out,
                                          drop_field=data_dictionary[dataset]['drop_fields'])
-            print('\t\t\tDeleted non-CS2007 fields from BLKDATA feature class.')
+            print('\t\t\tDeleted non-CS2007 fields from out {0} {1}.'.format(data_dictionary[dataset]['type'],
+                                                                             dataset_out))
+            # Delete non-Welsh data from the WGEM feature classes and tables
+            if sde == 'WGEM' and dataset in ('BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA'):
+                print('\t\t\tRemoving non-Welsh data from feature class...')
+                result = arcpy.GetCount_management(in_rows=dataset_out)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                fl_bng_100km = 'fl_bng_100km'
+                where_clause = '{0} in (\'SG\', \'SH\', \'SJ\', \'SM\', \'SN\', \'SO\', \'SR\', \'SS\', \'ST\')'.format(arcpy.AddFieldDelimiters(datasource=bng_100km,
+                                                                                                                                                 field='OS_TILE'))
+                print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
+                arcpy.MakeFeatureLayer_management(in_features=bng_100km,
+                                                  out_layer=fl_bng_100km,
+                                                  where_clause=where_clause)
+                result = arcpy.GetCount_management(in_rows=fl_bng_100km)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                featurelayer = 'featurelayer'
+                arcpy.MakeFeatureLayer_management(in_features=dataset_out,
+                                                  out_layer= featurelayer)
+                arcpy.SelectLayerByLocation_management(in_layer=featurelayer,
+                                                       overlap_type='INTERSECT',
+                                                       select_features=fl_bng_100km,
+                                                       selection_type='NEW_SELECTION',
+                                                       invert_spatial_relationship='INVERT')
+                result = arcpy.GetCount_management(in_rows=featurelayer)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                arcpy.DeleteFeatures_management(in_features=featurelayer)
+                arcpy.SelectLayerByAttribute_management(in_layer_or_view=featurelayer,
+                                                        selection_type='CLEAR_SELECTION')
+                result = arcpy.GetCount_management(in_rows=dataset_out)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                del result, count
+                del where_clause
+                del fl_bng_100km
+                arcpy.Delete_management(featurelayer)
+                del featurelayer
+                print('\t\t\tRemoved non-Welsh data from feature class.')
+            # Delete non-Welsh data from the WGEM feature classes and tables
+            if sde == 'WGEM' and dataset in ('COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA'):
+                print('\t\t\tRemoving non-Welsh data from table...')
+                result = arcpy.GetCount_management(in_rows=dataset_out)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                tableview = 'tableview'
+                parent_table = data_dictionary[dataset]['parent_table']
+                id_field = data_dictionary[parent_table]['id_field']
+                where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out, field=id_field),
+                                                                     arcpy.AddFieldDelimiters(datasource=data_dictionary[dataset]['parent_table'], field=id_field),
+                                                                     sde + '_' + parent_table)
+                print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
+                arcpy.MakeTableView_management(in_table=dataset_out,
+                                               out_view=tableview,
+                                               where_clause=where_clause)
+                result = arcpy.GetCount_management(in_rows=tableview)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                arcpy.DeleteRows_management(in_rows=tableview)
+                arcpy.SelectLayerByAttribute_management(in_layer_or_view=tableview,
+                                                        selection_type='CLEAR_SELECTION')
+                result = arcpy.GetCount_management(in_rows=dataset_out)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                del result, count
+                del where_clause
+                arcpy.Delete_management(tableview)
+                del tableview
+                print('\t\t\tRemoved non-Welsh data from table.')
+
     #
     print('Copied datasets.')
 
