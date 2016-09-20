@@ -102,34 +102,55 @@ print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
                                                    indent=4)))
 
 
-
 # Define data dictionary for holding feature class and related table parameters
 data_dictionary = collections.OrderedDict()
 data_dictionary['BLKDATA'] = {}
-data_dictionary['BLKDATA']['type'] = 'FeatureClass'
+data_dictionary['BLKDATA']['type'] = 'Feature Class'
 data_dictionary['BLKDATA']['id_field'] = 'BLKDATA_ID'
 data_dictionary['BLKDATA']['guid_field'] = 'BLKDATA_GUID'
-data_dictionary['BLKDATA']['related_table'] = None
+data_dictionary['BLKDATA']['drop_fields'] = ['EXTENT', 'FOREST', 'CREATE_ID']
 data_dictionary['SCPTDATA'] = {}
-data_dictionary['SCPTDATA']['type'] = 'FeatureClass'
+data_dictionary['SCPTDATA']['type'] = 'Feature Class'
 data_dictionary['SCPTDATA']['id_field'] = 'SCPTDATA_ID'
 data_dictionary['SCPTDATA']['guid_field'] = 'SCPTDATA_GUID'
-data_dictionary['SCPTDATA']['related_table'] = 'COMPDATA'
-data_dictionary['POINTDATA'] = {}
-data_dictionary['POINTDATA']['type'] = 'FeatureClass'
-data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
-data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
-data_dictionary['POINTDATA']['related_table'] = 'PCOMPDATA'
+data_dictionary['SCPTDATA']['drop_fields'] = ['SCPT', 'FORP', 'COVA', 'COFC', 'HABT', 'AMAW', 'SOIL', 'TCON', 'TRGH', 'TSLP',
+                                              'CULT', 'GRAZED_SWARD', 'CANOPY_FRAGMENTATION', 'MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'MAPCODE_HA', 'CPMT', 'BLK',
+                                              'FOREST', 'ALTD', 'THIN_STATUS', 'INVALID_THIN', 'CPTDATA_ID', 'THINCOUPE_ID', 'CREATE_ID', 'CANOPY_COVERP', 'NATIVE_SPIS_IN_CANOPYP', 'SEMI_NATURALP',
+                                              'PLANTEDP', 'POACHED_GROUND', 'SPATIAL_ERROR']
+data_dictionary['COMPDATA'] = {}
+data_dictionary['COMPDATA']['type'] = 'Table'
+data_dictionary['COMPDATA']['id_field'] = 'COMPDATA_ID'
+data_dictionary['COMPDATA']['guid_field'] = 'SCPTDATA_GUID'
+data_dictionary['COMPDATA']['drop_fields'] = ['SCPT', 'SPIS', 'ORIG', 'PROP', 'ROTN', 'MIXT', 'MODEL', 'STOP', 'FCST', 'EXTLUSE',
+                                              'HABT_CONDITION', 'LANDSCAPE_TYPE', 'STRUCTURE', 'BARK_STRIP_FRAYING', 'CPMT', 'PLYR', 'STOCK', 'SDATE', 'DISP', 'BLK',
+                                              'FOREST', 'STRY', 'YLDC', 'SPNUM', 'THCY', 'DFST', 'DNXT', 'VOLP', 'VOLT', 'DBHP',
+                                              'CREATE_ID', 'COMP_NUM', 'SPACING', 'WHCL', 'DBH_CLASS', 'FIRST_GRADEP', 'SECOND_GRADEP', 'THIRD_GRADEP', 'WOODLAND_LOSS_TYPE', 'WOODLAND_LOSS_CAUSE',
+                                              'BROWSING_RATE', 'BROWSELINE', 'BASAL_SHOOTS']
 data_dictionary['LINEARDATA'] = {}
-data_dictionary['LINEARDATA']['type'] = 'FeatureClass'
+data_dictionary['LINEARDATA']['type'] = 'Feature Class'
 data_dictionary['LINEARDATA']['id_field'] = 'LINEARDATA_ID'
 data_dictionary['LINEARDATA']['guid_field'] = 'LINEARDATA_GUID'
-data_dictionary['LINEARDATA']['related_table'] = 'EVENTDATA'
+data_dictionary['LINEARDATA']['drop_fields'] = ['BLKDATA_ID', 'CREATE_ID']
 data_dictionary['EVENTDATA'] = {}
 data_dictionary['EVENTDATA']['type'] = 'Table'
 data_dictionary['EVENTDATA']['id_field'] = 'EVENTDATA_ID'
 data_dictionary['EVENTDATA']['guid_field'] = 'EVENTDATA_GUID'
-data_dictionary['EVENTDATA']['related_table'] = 'SEVENTDATA'
+data_dictionary['EVENTDATA']['drop_fields'] = ['MAPCODE_BD', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID']
+data_dictionary['SEVENTDATA'] = {}
+data_dictionary['SEVENTDATA']['type'] = 'Table'
+data_dictionary['SEVENTDATA']['id_field'] = 'SEVENTDATA_ID'
+data_dictionary['SEVENTDATA']['guid_field'] = 'SEVENTDATA_GUID'
+data_dictionary['SEVENTDATA']['drop_fields'] = ['CREATE_ID']
+data_dictionary['POINTDATA'] = {}
+data_dictionary['POINTDATA']['type'] = 'Feature Class'
+data_dictionary['POINTDATA']['id_field'] = 'POINTDATA_ID'
+data_dictionary['POINTDATA']['guid_field'] = 'POINTDATA_GUID'
+data_dictionary['POINTDATA']['drop_fields'] = ['MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID', 'CPTDATA_ID']
+data_dictionary['PCOMPDATA'] = {}
+data_dictionary['PCOMPDATA']['type'] = 'Table'
+data_dictionary['PCOMPDATA']['id_field'] = 'PCOMPDATA_ID'
+data_dictionary['PCOMPDATA']['guid_field'] = 'PCOMPDATA_GUID'
+data_dictionary['PCOMPDATA']['drop_fields'] = ['CREATE_ID']
 #
 # Print data_dictionary
 print('\n\ndata_dictionary:\n{0}'.format(json.dumps(data_dictionary,
@@ -169,7 +190,7 @@ if copy_datasets:
                 dataset_in = sde_dictionary[sde]['connection_file'] +\
                              '\\' +\
                              dataset
-            elif data_dictionary[dataset]['type'] == 'FeatureClass':
+            elif data_dictionary[dataset]['type'] == 'Feature Class':
                 dataset_in = sde_dictionary[sde]['connection_file'] +\
                              '\\' +\
                              sde_dictionary[sde]['user'] +\
@@ -192,10 +213,12 @@ if copy_datasets:
             dataset_out = sde + '_' + dataset
             dataset_out = os.path.join(fgdb, dataset_out)
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
+            # Delete out dataset if it already exists
             if arcpy.Exists(dataset=dataset_out):
                 arcpy.Delete_management(in_data=dataset_out,
                                         data_type=data_dictionary[dataset]['type'])
-            if data_dictionary[dataset]['type'] == 'FeatureClass':
+            # Create empty out dataset using in dataset as a template
+            if data_dictionary[dataset]['type'] == 'Feature Class':
                 # Create empty feature class
                 arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
                                                     out_name=os.path.basename(dataset_out),
@@ -209,28 +232,25 @@ if copy_datasets:
                                              template=dataset_in)
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
-            # Create empty related table
-            if dataset not in ('BLKDATA', 'LINEARDATA'):
-                # Define in related table
-                related_table_in = sde_dictionary[sde]['connection_file'] + \
-                                   '\\' + \
-                                   data_dictionary[dataset]['related_table']
-                print('\t\t\trelated_table_in:\t{0}'.format(related_table_in))
-                # Define out related table
-                related_table_out = sde + '_' + data_dictionary[dataset]['related_table']
-                related_table_out = os.path.join(fgdb, related_table_out)
-                print('\t\t\trelated_table_out:\t{0}'.format(related_table_out))
-                if arcpy.Exists(dataset=related_table_out):
-                    arcpy.Delete_management(in_data=related_table_out,
-                                            data_type='Table')
-                # Create empty table
-                arcpy.CreateTable_management(out_path=os.path.dirname(related_table_out),
-                                             out_name=os.path.basename(related_table_out),
-                                             template=related_table_in)
-
-
-
-
+            # Append data from in dataset to out dataset
+            print('\t\t\tAppending rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
+                                                                                dataset_in,
+                                                                                dataset_out))
+            arcpy.Append_management(inputs=[dataset_in],
+                                    target=dataset_out,
+                                    schema_type='NO_TEST')
+            print('\t\t\tAppended rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
+                                                                               dataset_in,
+                                                                               dataset_out))
+            result = arcpy.GetCount_management(dataset_out)
+            count = int(result.getOutput(0))
+            print('\t\t\tCount:\t\t{0}'.format(count))
+            ## Delete non-CS2007 fields from BLKDATA feature class
+            print('\t\t\tDeleting non-CS2007 fields from BLKDATA feature class...')
+            print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
+            arcpy.DeleteField_management(in_table=dataset_out,
+                                         drop_field=data_dictionary[dataset]['drop_fields'])
+            print('\t\t\tDeleted non-CS2007 fields from BLKDATA feature class.')
     #
     print('Copied datasets.')
 
