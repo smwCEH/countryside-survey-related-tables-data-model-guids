@@ -256,6 +256,9 @@ if copy_datasets:
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
             # Append data from in dataset to out dataset
+
+            # TODO Select Welsh features from WGEM schema before appending to feature class or table
+
             print('\t\t\tAppending rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
                                                                                   dataset_in,
                                                                                   dataset_out))
