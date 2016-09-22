@@ -83,21 +83,24 @@ arcpy.env.overwriteOutput = True
 
 # Define sde dictionary for holding ArcSDE parameters
 sde_dictionary = collections.OrderedDict()
-sde_dictionary['CS_ORIGINAL'] = {}
-sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
-sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
-sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
-sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
-sde_dictionary['CS_RESTORED'] = {}
-sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
-sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
-sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
+# sde_dictionary['CS_ORIGINAL'] = {}
+# sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
+# sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
+# sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
+# sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
+# sde_dictionary['CS_ORIGINAL']['offset'] = 10000000000
+# sde_dictionary['CS_RESTORED'] = {}
+# sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+# sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
+# sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
+# sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
+# sde_dictionary['CS_RESTORED']['offset'] = 20000000000
 sde_dictionary['WGEM'] = {}
 sde_dictionary['WGEM']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
 sde_dictionary['WGEM']['user'] = r'WGEMADMIN'
 sde_dictionary['WGEM']['FeatureDataset'] = r'ForesterData'
 sde_dictionary['WGEM']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA', 'POINTDATA', 'PCOMPDATA']
+sde_dictionary['WGEM']['offset'] = 30000000000
 #
 # Print sde_dictionary
 print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
@@ -272,14 +275,14 @@ if copy_datasets:
             count = int(result.getOutput(0))
             print('\t\t\tCount:\t\t{0}'.format(count))
             # Delete non-CS2007 fields from BLKDATA feature class
-            print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'],
-                                                                                dataset_out))
-            print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
-            arcpy.DeleteField_management(in_table=dataset_out,
-                                         drop_field=data_dictionary[dataset]['drop_fields'])
-            print('\t\t\tDeleted non-CS2007 fields from out {0} {1}.'.format(data_dictionary[dataset]['type'],
-                                                                             dataset_out))
-            # Delete non-Welsh data from the WGEM feature classes and tables
+            # print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'],
+            #                                                                     dataset_out))
+            # print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
+            # arcpy.DeleteField_management(in_table=dataset_out,
+            #                              drop_field=data_dictionary[dataset]['drop_fields'])
+            # print('\t\t\tDeleted non-CS2007 fields from out {0} {1}.'.format(data_dictionary[dataset]['type'],
+            #                                                                  dataset_out))
+            # Delete non-Welsh data from the WGEM feature classes
             if sde == 'WGEM' and dataset in ('BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA'):
                 print('\t\t\tRemoving non-Welsh data from feature class...')
                 result = arcpy.GetCount_management(in_rows=dataset_out)
@@ -312,13 +315,13 @@ if copy_datasets:
                 result = arcpy.GetCount_management(in_rows=dataset_out)
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
-                del result, count
-                del where_clause
-                del fl_bng_100km
-                arcpy.Delete_management(featurelayer)
-                del featurelayer
+                # del result, count
+                # del where_clause
+                # del fl_bng_100km
+                # arcpy.Delete_management(featurelayer)
+                # del featurelayer
                 print('\t\t\tRemoved non-Welsh data from feature class.')
-            # Delete non-Welsh data from the WGEM feature classes and tables
+            # Delete non-Welsh data from the WGEM tables
             if sde == 'WGEM' and dataset in ('COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA'):
                 print('\t\t\tRemoving non-Welsh data from table...')
                 result = arcpy.GetCount_management(in_rows=dataset_out)
@@ -326,10 +329,13 @@ if copy_datasets:
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
                 tableview = 'tableview'
                 parent_table = data_dictionary[dataset]['parent_table']
+                print('\t\t\t\tparent_table:\t\t{0}'.format(parent_table))
                 id_field = data_dictionary[parent_table]['id_field']
-                where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out, field=id_field),
-                                                                     arcpy.AddFieldDelimiters(datasource=data_dictionary[dataset]['parent_table'], field=id_field),
-                                                                     sde + '_' + parent_table)
+                where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out,
+                                                                                                  field=id_field),
+                                                                         arcpy.AddFieldDelimiters(datasource=sde + '_' + parent_table,
+                                                                                                  field=id_field),
+                                                                         sde + '_' + parent_table)
                 print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
                 arcpy.MakeTableView_management(in_table=dataset_out,
                                                out_view=tableview,
@@ -343,10 +349,10 @@ if copy_datasets:
                 result = arcpy.GetCount_management(in_rows=dataset_out)
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
-                del result, count
-                del where_clause
-                arcpy.Delete_management(tableview)
-                del tableview
+                # del result, count
+                # del where_clause
+                # arcpy.Delete_management(tableview)
+                # del tableview
                 print('\t\t\tRemoved non-Welsh data from table.')
 
     #
