@@ -65,8 +65,6 @@ child_t = os.path.join(fgdb, 'WGEM_PCOMPDATA')
 
 
 parent_row_count = child_row_count = 0
-
-
 for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
                                                field_names=['OBJECTID', 'POINTDATA_ID'])):
     print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
@@ -80,8 +78,6 @@ for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
         print('\t{0:<6}\t{1:>10}'.format(child_row[0],
                                          child_row[1]))
         child_row_count +=1
-
-
 print('parent_row_count:\t\t{0}'.format(parent_row_count))
 print('child_row_count:\t\t{0}'.format(child_row_count))
 
