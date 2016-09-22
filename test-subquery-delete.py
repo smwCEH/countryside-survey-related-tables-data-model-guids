@@ -60,33 +60,97 @@ fgdb = r'E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-{0}.gd
 print('\n\nfgdb:\t\t\{0}'.format(fgdb))
 
 
-# parent_fc = os.path.join(fgdb, 'WGEM_SCPTDATA')
-# child_t = os.path.join(fgdb, 'WGEM_COMPDATA')
-# id_field = 'SCPTDATA_ID'
-# parent_fc = os.path.join(fgdb, 'WGEM_LINEARDATA')
-# child_t = os.path.join(fgdb, 'WGEM_EVENTDATA')
-# id_field = 'LINEARDATA_ID'
-parent_fc = os.path.join(fgdb, 'WGEM_EVENTDATA')
-child_t = os.path.join(fgdb, 'WGEM_SEVENTDATA')
-id_field = 'EVENTDATA_ID'
-# parent_fc = os.path.join(fgdb, 'WGEM_POINTDATA')
-# child_t = os.path.join(fgdb, 'WGEM_PCOMPDATA')
-# id_field = 'POINTDATA_ID'
-
-
+parent_fc = os.path.join(fgdb, 'WGEM_SCPTDATA')
+child_t = os.path.join(fgdb, 'WGEM_COMPDATA')
+id_field = 'SCPTDATA_ID'
+print('\n\nparent_fc:\t\t{0}\nchild_t:\t\t{1}\nid_field:\t\t{2}'.format(parent_fc,
+                                                                        child_t,
+                                                                        id_field))
 parent_row_count = child_row_count = 0
 for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
                                                field_names=['OBJECTID', id_field])):
-    print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
-                                    parent_row[1]))
+    # print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
+    #                                 parent_row[1]))
     parent_row_count += 1
     for child_row in sorted(arcpy.da.SearchCursor(in_table=child_t,
                                                   field_names=['OBJECTID', id_field],
                                                   where_clause='{0} = {1}'.format(arcpy.AddFieldDelimiters(datasource=child_t,
                                                                                                            field=id_field),
                                                                                   parent_row[1]))):
-        print('\t{0:<6}\t{1:>10}'.format(child_row[0],
-                                         child_row[1]))
+        # print('\t{0:<6}\t{1:>10}'.format(child_row[0],
+        #                                  child_row[1]))
+        child_row_count +=1
+print('parent_row_count:\t\t{0}'.format(parent_row_count))
+print('child_row_count:\t\t{0}'.format(child_row_count))
+
+
+parent_fc = os.path.join(fgdb, 'WGEM_LINEARDATA')
+child_t = os.path.join(fgdb, 'WGEM_EVENTDATA')
+id_field = 'LINEARDATA_ID'
+print('\n\nparent_fc:\t\t{0}\nchild_t:\t\t{1}\nid_field:\t\t{2}'.format(parent_fc,
+                                                                        child_t,
+                                                                        id_field))
+parent_row_count = child_row_count = 0
+for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
+                                               field_names=['OBJECTID', id_field])):
+    # print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
+    #                                 parent_row[1]))
+    parent_row_count += 1
+    for child_row in sorted(arcpy.da.SearchCursor(in_table=child_t,
+                                                  field_names=['OBJECTID', id_field],
+                                                  where_clause='{0} = {1}'.format(arcpy.AddFieldDelimiters(datasource=child_t,
+                                                                                                           field=id_field),
+                                                                                  parent_row[1]))):
+        # print('\t{0:<6}\t{1:>10}'.format(child_row[0],
+        #                                  child_row[1]))
+        child_row_count +=1
+print('parent_row_count:\t\t{0}'.format(parent_row_count))
+print('child_row_count:\t\t{0}'.format(child_row_count))
+
+
+parent_fc = os.path.join(fgdb, 'WGEM_EVENTDATA')
+child_t = os.path.join(fgdb, 'WGEM_SEVENTDATA')
+id_field = 'EVENTDATA_ID'
+print('\n\nparent_fc:\t\t{0}\nchild_t:\t\t{1}\nid_field:\t\t{2}'.format(parent_fc,
+                                                                        child_t,
+                                                                        id_field))
+parent_row_count = child_row_count = 0
+for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
+                                               field_names=['OBJECTID', id_field])):
+    # print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
+    #                                 parent_row[1]))
+    parent_row_count += 1
+    for child_row in sorted(arcpy.da.SearchCursor(in_table=child_t,
+                                                  field_names=['OBJECTID', id_field],
+                                                  where_clause='{0} = {1}'.format(arcpy.AddFieldDelimiters(datasource=child_t,
+                                                                                                           field=id_field),
+                                                                                  parent_row[1]))):
+        # print('\t{0:<6}\t{1:>10}'.format(child_row[0],
+        #                                  child_row[1]))
+        child_row_count +=1
+print('parent_row_count:\t\t{0}'.format(parent_row_count))
+print('child_row_count:\t\t{0}'.format(child_row_count))
+
+
+parent_fc = os.path.join(fgdb, 'WGEM_POINTDATA')
+child_t = os.path.join(fgdb, 'WGEM_PCOMPDATA')
+id_field = 'POINTDATA_ID'
+print('\n\nparent_fc:\t\t{0}\nchild_t:\t\t{1}\nid_field:\t\t{2}'.format(parent_fc,
+                                                                        child_t,
+                                                                        id_field))
+parent_row_count = child_row_count = 0
+for parent_row in sorted(arcpy.da.SearchCursor(in_table=parent_fc,
+                                               field_names=['OBJECTID', id_field])):
+    # print('{0:<6}\t\t{1:>10}'.format(parent_row[0],
+    #                                 parent_row[1]))
+    parent_row_count += 1
+    for child_row in sorted(arcpy.da.SearchCursor(in_table=child_t,
+                                                  field_names=['OBJECTID', id_field],
+                                                  where_clause='{0} = {1}'.format(arcpy.AddFieldDelimiters(datasource=child_t,
+                                                                                                           field=id_field),
+                                                                                  parent_row[1]))):
+        # print('\t{0:<6}\t{1:>10}'.format(child_row[0],
+        #                                  child_row[1]))
         child_row_count +=1
 print('parent_row_count:\t\t{0}'.format(parent_row_count))
 print('child_row_count:\t\t{0}'.format(child_row_count))
