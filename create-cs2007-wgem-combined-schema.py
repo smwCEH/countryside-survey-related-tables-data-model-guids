@@ -56,51 +56,23 @@ arcpy.env.overwriteOutput = True
 #     print('\t{0:<30}:\t{1}'.format(environment, arcpy.env[environment]))
 
 
-# # Define ArcSDE path and user for original CS2007 geodatabase
-# arcsde_cs_original = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
-# arcsde_user_cs_original = r'CSADMIN'
-# print('\n\narcsde_cs_original:\t\t{0}'.format(arcsde_cs_original))
-# print('arcsde_user_cs_original:\t\t{0}'.format(arcsde_user_cs_original))
-#
-#
-# # Define ArcSDE path, user and feature dataset for restored CS2007 geodatabase
-# arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-# arcsde_user_cs_restored = r'CS2007_ADMIN'
-# arcsde_feature_dataset_cs_restored = r'ForesterData'
-# print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
-# print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
-# print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
-#
-#
-# # Define ArcSDE path, user and feature dataset for WGEM geodatabase
-# arcsde_cs_restored = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
-# arcsde_user_cs_restored = r'WGEMADMIN'
-# arcsde_feature_dataset_cs_restored = r'ForesterData'
-# print('\n\narcsde_cs_restored:\t\t{0}'.format(arcsde_cs_restored))
-# print('arcsde_user_cs_restored:\t\t{0}'.format(arcsde_user_cs_restored))
-# print('arcsde_feature_dataset_cs_restored:\t\t{0}'.format(arcsde_feature_dataset_cs_restored))
-
-
 # Define sde dictionary for holding ArcSDE parameters
 sde_dictionary = collections.OrderedDict()
-# sde_dictionary['CS_ORIGINAL'] = {}
-# sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
-# sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
-# sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
-# sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
-# sde_dictionary['CS_ORIGINAL']['offset'] = 10000000000
-# sde_dictionary['CS_RESTORED'] = {}
-# sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
-# sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
-# sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
-# sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
-# sde_dictionary['CS_RESTORED']['offset'] = 20000000000
+sde_dictionary['CS_ORIGINAL'] = {}
+sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
+sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
+sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
+sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
+sde_dictionary['CS_RESTORED'] = {}
+sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
+sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
+sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
+sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
 sde_dictionary['WGEM'] = {}
 sde_dictionary['WGEM']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
 sde_dictionary['WGEM']['user'] = r'WGEMADMIN'
 sde_dictionary['WGEM']['FeatureDataset'] = r'ForesterData'
 sde_dictionary['WGEM']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA', 'POINTDATA', 'PCOMPDATA']
-sde_dictionary['WGEM']['offset'] = 30000000000
 #
 # Print sde_dictionary
 print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
@@ -178,6 +150,105 @@ data_dictionary['PCOMPDATA']['parent_table'] = 'POINTDATA'
 print('\n\ndata_dictionary:\n{0}'.format(json.dumps(data_dictionary,
                                                     sort_keys=False,
                                                     indent=4)))
+
+
+# Create dictionary to hold field aliases
+# Field aliases held in CS2007_ADMIN.SM_TABLE_ITEM table
+print('\n\nCreating dictionary to hold field aliases...')
+#
+field_alias_dictionary = collections.OrderedDict()
+field_alias_dictionary['BLKDATA'] = {}
+field_alias_dictionary['BLKDATA']['BLK'] = 'CS Square'
+# sm_table_item_table = arcsde_cs_restored + '\\' +\
+#                       arcsde_user_cs_restored + '.' + 'SM_TABLE_ITEM'
+sm_table_item_table = sde_dictionary['CS_RESTORED']['connection_file'] + '\\' +\
+                      sde_dictionary['CS_RESTORED']['user'] + '.' + 'SM_TABLE_ITEM'
+print('\t#\n\tsm_table_item_table:\t\t{0}'.format(sm_table_item_table))
+for dataset in data_dictionary.keys():
+    if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Ignore EVENTDATA related table as will queried as the related table of the LINEARDATA feature class
+        field_alias_dictionary[dataset] = {}
+        print('\t#\n\tdataset:\t\t{0}'.format(dataset))
+        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
+        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
+                                          '\'' + dataset + '\'')
+        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
+        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
+                                   field_names=search_cursor_fields,
+                                   where_clause=where_clause) as search_cursor:
+            for search_row in search_cursor:
+                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
+                                                       search_row[1],
+                                                       search_row[2]))
+                field_alias_dictionary[dataset][search_row[1]]= search_row[2]
+        del search_cursor, search_cursor_fields
+        related_table = data_dictionary[dataset]['child_table']
+        print('\t\trelated_table:\t\t{0}'.format(related_table))
+        field_alias_dictionary[related_table] = {}
+        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
+        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
+                                          '\'' + related_table + '\'')
+        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
+        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
+                                   field_names=search_cursor_fields,
+                                   where_clause=where_clause) as search_cursor:
+            for search_row in search_cursor:
+                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
+                                                       search_row[1],
+                                                       search_row[2]))
+                field_alias_dictionary[related_table][search_row[1]] = search_row[2]
+        del search_cursor, search_cursor_fields
+    if dataset in ('EVENTDATA'):  # Get SEVENTDATA
+        related_table = data_dictionary[dataset]['child_table']
+        print('\t\trelated_table:\t\t{0}'.format(related_table))
+        field_alias_dictionary[related_table] = {}
+        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
+        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
+                                          '\'' + related_table + '\'')
+        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
+        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
+                                   field_names=search_cursor_fields,
+                                   where_clause=where_clause) as search_cursor:
+            for search_row in search_cursor:
+                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
+                                                       search_row[1],
+                                                       search_row[2]))
+                field_alias_dictionary[related_table][search_row[1]]= search_row[2]
+        del search_cursor, search_cursor_fields
+# Print out field_alias_dictionary
+print('\t#\n\t{0}'.format(field_alias_dictionary))
+# Print out lower level dictionaries for each dataset and related table
+print('\t#\n\tfield_alias_dictionary[\'BLKDATA\']:\n\t{0}'.format(field_alias_dictionary['BLKDATA']))
+print('\tfield_alias_dictionary[\'SCPTDATA\']:\n\t{0}'.format(field_alias_dictionary['SCPTDATA']))
+print('\tfield_alias_dictionary[\'COMPDATA\']:\n\t{0}'.format(field_alias_dictionary['COMPDATA']))
+print('\tfield_alias_dictionary[\'POINTDATA\']:\n\t{0}'.format(field_alias_dictionary['POINTDATA']))
+print('\tfield_alias_dictionary[\'PCOMPDATA\']:\n\t{0}'.format(field_alias_dictionary['PCOMPDATA']))
+print('\tfield_alias_dictionary[\'LINEARDATA\']:\n\t{0}'.format(field_alias_dictionary['LINEARDATA']))
+print('\tfield_alias_dictionary[\'EVENTDATA\']:\n\t{0}'.format(field_alias_dictionary['EVENTDATA']))
+print('\tfield_alias_dictionary[\'SEVENTDATA\']:\n\t{0}'.format(field_alias_dictionary['SEVENTDATA']))
+# Print out selected field aliases
+alias = field_alias_dictionary.get('BLKDATA', {}).get('BLK', DEFAULT)
+print('\t#\n\t{0}'.format(alias))
+alias = field_alias_dictionary.get('SCPTDATA', {}).get('BROAD_HABITAT', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('COMPDATA', {}).get('ROAD_VERGE_A', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('POINTDATA', {}).get('VISIT_STATUS', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('PCOMPDATA', {}).get('HABT_CODE', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('LINEARDATA', {}).get('HABT_CODE', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('EVENTDATA', {}).get('HEVENT_FROM', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('SEVENTDATA', {}).get('VEGETATION_TYPE', DEFAULT)
+print('\t{0}'.format(alias))
+alias = field_alias_dictionary.get('PCOMPDATA', {}).get('CHEESY_PEAS', DEFAULT)
+print('\t{0}'.format(alias))
+#
+print('\t#\nCreated dictionary to hold field aliases.')
 
 
 # Define file geodatabase
@@ -354,6 +425,144 @@ if copy_datasets:
                 # arcpy.Delete_management(tableview)
                 # del tableview
                 print('\t\t\tRemoved non-Welsh data from table.')
+            # Add any additional fields to feature classes and related tables
+            print('\t\t\tAdding additional fields...')
+            # Add Point_Proximity field to POINTDATA feature class
+            if dataset == 'POINTDATA':
+                print('\t\t\t\tAdding Point_Proximity field to POINTDATA feature class...')
+                arcpy.AddField_management(in_table=dataset_out,
+                                          field_name='Point_Proximity',
+                                          field_type='TEXT',
+                                          field_precision='',
+                                          field_scale='',
+                                          field_length=10,
+                                          field_alias='Point Proximity',
+                                          field_is_nullable='NULLABLE',
+                                          field_is_required='NON_REQUIRED',
+                                          field_domain='')
+                print('\t\t\t\tAdded Point_Proximity field to POINTDATA feature class.')
+            # Add Polygon_Area field to SCPTDATA feature class
+            if dataset == 'SCPTDATA':
+                print('\t\t\t\tAdding Polygon_Area field to SCPTDATA feature class...')
+                arcpy.AddField_management(in_table=dataset_out,
+                                          field_name='Polygon_Area',
+                                          field_type='FLOAT',
+                                          field_precision=12,
+                                          field_scale=3,
+                                          field_length='',
+                                          field_alias='Polygon Area',
+                                          field_is_nullable='NULLABLE',
+                                          field_is_required='NON_REQUIRED',
+                                          field_domain='')
+                print('\t\t\t\tAdded Polygon_Area field to SCPTDATA feature class.')
+                print('\t\t\t\t\tCalculating Polygon_Area...')
+                arcpy.CalculateField_management(in_table=dataset_out,
+                                                field='Polygon_Area',
+                                                expression='!shape.area@SQUAREMETERS!',
+                                                expression_type='PYTHON',
+                                                code_block='#')
+                print('\t\t\t\t\tCalculated Polygon_Area.')
+            # Add Linear_Length field to LINEARDATA feature class
+            if dataset == 'LINEARDATA':
+                print('\t\t\t\tAdding Linear_Length field to LINEARDATA feature class...')
+                arcpy.AddField_management(in_table=dataset_out,
+                                          field_name='Linear_Length',
+                                          field_type='FLOAT',
+                                          field_precision=12,
+                                          field_scale=3,
+                                          field_length='',
+                                          field_alias='Linear Length',
+                                          field_is_nullable='NULLABLE',
+                                          field_is_required='NON_REQUIRED',
+                                          field_domain='')
+                print('\t\t\t\tAdded Linear_Length field to LINEARDATA feature class.')
+                print('\t\t\t\t\tCalculating Linear_Length...')
+                arcpy.CalculateField_management(in_table=dataset_out,
+                                                field='Linear_Length',
+                                                expression='!shape.length@METERS!',
+                                                expression_type='PYTHON',
+                                                code_block='#')
+                print('\t\t\t\t\tCalculated Linear_Length.')
+            # Add CONDITION, DISEASE_SIGNS and HABITAT_BOXES fields to PCOMPDATA related table
+            if dataset == 'PCOMPDATA':
+                field_names = [f.name for f in arcpy.ListFields(dataset=dataset_out)]
+                if 'CONDITION' not in field_names:
+                    print('\t\t\t\tAdding CONDITION field to PCOMPDATA related table...')
+                    arcpy.AddField_management(in_table=dataset_out,
+                                              field_name='CONDITION',
+                                              field_type='SHORT',
+                                              field_precision=3,
+                                              field_scale='',
+                                              field_length='',
+                                              field_alias='Condition',
+                                              field_is_nullable='NULLABLE',
+                                              field_is_required='NON_REQUIRED',
+                                              field_domain='')
+                    print('\t\t\t\tAdded CONDITION field to PCOMPDATA feature class.')
+                if 'DISEASE_SIGNS' not in field_names:
+                    print('\t\t\t\tAdding DISEASE_SIGNS field to PCOMPDATA related table...')
+                    arcpy.AddField_management(in_table=dataset_out,
+                                              field_name='DISEASE_SIGNS',
+                                              field_type='SHORT',
+                                              field_precision=3,
+                                              field_scale='',
+                                              field_length='',
+                                              field_alias='Signs of disease',
+                                              field_is_nullable='NULLABLE',
+                                              field_is_required='NON_REQUIRED',
+                                              field_domain='')
+                    print('\t\t\t\tAdded DISEASE_SIGNS field to PCOMPDATA feature class.')
+                if 'HABITAT_BOXES' not in field_names:
+                    print('\t\t\t\tAdding HABITAT_BOXES field to PCOMPDATA related table...')
+                    arcpy.AddField_management(in_table=dataset_out,
+                                              field_name='HABITAT_BOXES',
+                                              field_type='SHORT',
+                                              field_precision=3,
+                                              field_scale='',
+                                              field_length='',
+                                              field_alias='Habitat boxes',
+                                              field_is_nullable='NULLABLE',
+                                              field_is_required='NON_REQUIRED',
+                                              field_domain='')
+                    print('\t\t\t\tAdded HABITAT_BOXES field to PCOMPDATA feature class.')
+            # Add Editor and Date of edit fields to BLKDATA feature class
+            print('\t\t\t\tAdding Editor and Date of Edit fields to {0}...'.format(dataset_out))
+            arcpy.AddField_management(in_table=dataset_out,
+                                      field_name='EDITOR',
+                                      field_type='TEXT',
+                                      field_precision='',
+                                      field_scale='',
+                                      field_length=25,
+                                      field_alias='Editor',
+                                      field_is_nullable='NULLABLE',
+                                      field_is_required='NON_REQUIRED',
+                                      field_domain='')
+            arcpy.AddField_management(in_table=dataset_out,
+                                      field_name='DATE_OF_EDIT',
+                                      field_type='DATE',
+                                      field_precision='',
+                                      field_scale='',
+                                      field_length='',
+                                      field_alias='Date of edit',
+                                      field_is_nullable='NULLABLE',
+                                      field_is_required='NON_REQUIRED',
+                                      field_domain='')
+            print('\t\t\t\tAdded Editor and Date of Edit fields to {0}.'.format(dataset_out))
+            print('\t\t\tAdded additional fields.')
+            # Add field aliases
+            print('\t\t\tAdding field aliases...')
+            field_names = arcpy.ListFields(dataset=dataset_out)
+            for field in field_names:
+                if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN'] and field.aliasName == field.name:
+                    print('\t\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
+                                                                                   field.type,
+                                                                                   field.length))
+                    field_alias = field_alias_dictionary.get(dataset, {}).get(field.name, DEFAULT)
+                    print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
+                    arcpy.AlterField_management(in_table=dataset_out,
+                                                field=field.name,
+                                                new_field_alias=field_alias)
+            print('\t\t\tAdded field aliases.')
 
     #
     print('Copied datasets.')
@@ -365,101 +574,6 @@ sys.exit()
 
 
 
-# Create dictionary to hold field aliases
-# Field aliases held in CS2007_ADMIN.SM_TABLE_ITEM table
-print('\n\nCreating dictionary to hold field aliases...')
-#
-field_alias_dictionary = collections.OrderedDict()
-field_alias_dictionary['BLKDATA'] = {}
-field_alias_dictionary['BLKDATA']['BLK'] = 'CS Square'
-sm_table_item_table = arcsde_cs_restored + '\\' +\
-                      arcsde_user_cs_restored + '.' + 'SM_TABLE_ITEM'
-print('\t#\n\tsm_table_item_table:\t\t{0}'.format(sm_table_item_table))
-for dataset in data_dictionary.keys():
-    if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Ignore EVENTDATA related table as will queried as the related table of the LINEARDATA feature class
-        field_alias_dictionary[dataset] = {}
-        print('\t#\n\tdataset:\t\t{0}'.format(dataset))
-        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
-        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
-        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
-                                          '\'' + dataset + '\'')
-        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
-        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
-                                   field_names=search_cursor_fields,
-                                   where_clause=where_clause) as search_cursor:
-            for search_row in search_cursor:
-                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
-                                                       search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[dataset][search_row[1]]= search_row[2]
-        del search_cursor, search_cursor_fields
-        related_table = data_dictionary[dataset]['related_table']
-        print('\t\trelated_table:\t\t{0}'.format(related_table))
-        field_alias_dictionary[related_table] = {}
-        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
-        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
-        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
-                                          '\'' + related_table + '\'')
-        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
-        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
-                                   field_names=search_cursor_fields,
-                                   where_clause=where_clause) as search_cursor:
-            for search_row in search_cursor:
-                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
-                                                       search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[related_table][search_row[1]] = search_row[2]
-        del search_cursor, search_cursor_fields
-    if dataset in ('EVENTDATA'):  # Get SEVENTDATA
-        related_table = data_dictionary[dataset]['related_table']
-        print('\t\trelated_table:\t\t{0}'.format(related_table))
-        field_alias_dictionary[related_table] = {}
-        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
-        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
-        where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
-                                          '\'' + related_table + '\'')
-        print('\t\twhere_clause:\t\t{0}'.format(where_clause))
-        with arcpy.da.SearchCursor(in_table=sm_table_item_table,
-                                   field_names=search_cursor_fields,
-                                   where_clause=where_clause) as search_cursor:
-            for search_row in search_cursor:
-                print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
-                                                       search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[related_table][search_row[1]]= search_row[2]
-        del search_cursor, search_cursor_fields
-# Print out field_alias_dictionary
-print('\t#\n\t{0}'.format(field_alias_dictionary))
-# Print out lower level dictionaries for each dataset and related table
-print('\t#\n\tfield_alias_dictionary[\'BLKDATA\']:\n\t{0}'.format(field_alias_dictionary['BLKDATA']))
-print('\tfield_alias_dictionary[\'SCPTDATA\']:\n\t{0}'.format(field_alias_dictionary['SCPTDATA']))
-print('\tfield_alias_dictionary[\'COMPDATA\']:\n\t{0}'.format(field_alias_dictionary['COMPDATA']))
-print('\tfield_alias_dictionary[\'POINTDATA\']:\n\t{0}'.format(field_alias_dictionary['POINTDATA']))
-print('\tfield_alias_dictionary[\'PCOMPDATA\']:\n\t{0}'.format(field_alias_dictionary['PCOMPDATA']))
-print('\tfield_alias_dictionary[\'LINEARDATA\']:\n\t{0}'.format(field_alias_dictionary['LINEARDATA']))
-print('\tfield_alias_dictionary[\'EVENTDATA\']:\n\t{0}'.format(field_alias_dictionary['EVENTDATA']))
-print('\tfield_alias_dictionary[\'SEVENTDATA\']:\n\t{0}'.format(field_alias_dictionary['SEVENTDATA']))
-# Print out selected field aliases
-alias = field_alias_dictionary.get('BLKDATA', {}).get('BLK', DEFAULT)
-print('\t#\n\t{0}'.format(alias))
-alias = field_alias_dictionary.get('SCPTDATA', {}).get('BROAD_HABITAT', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('COMPDATA', {}).get('ROAD_VERGE_A', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('POINTDATA', {}).get('VISIT_STATUS', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('PCOMPDATA', {}).get('HABT_CODE', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('LINEARDATA', {}).get('HABT_CODE', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('EVENTDATA', {}).get('HEVENT_FROM', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('SEVENTDATA', {}).get('VEGETATION_TYPE', DEFAULT)
-print('\t{0}'.format(alias))
-alias = field_alias_dictionary.get('PCOMPDATA', {}).get('CHEESY_PEAS', DEFAULT)
-print('\t{0}'.format(alias))
-#
-print('\t#\nCreated dictionary to hold field aliases.')
 
 
 copy_datasets = True
