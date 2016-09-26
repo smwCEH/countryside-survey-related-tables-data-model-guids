@@ -330,9 +330,6 @@ if copy_datasets:
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
             # Append data from in dataset to out dataset
-
-            # TODO Select Welsh features from WGEM schema before appending to feature class or table
-
             print('\t\t\tAppending rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
                                                                                   dataset_in,
                                                                                   dataset_out))
@@ -345,7 +342,7 @@ if copy_datasets:
             result = arcpy.GetCount_management(dataset_out)
             count = int(result.getOutput(0))
             print('\t\t\tCount:\t\t{0}'.format(count))
-            # Delete non-CS2007 fields from BLKDATA feature class
+            # Delete non-CS2007 fields
             # print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'],
             #                                                                     dataset_out))
             # print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
@@ -558,16 +555,29 @@ if copy_datasets:
                                                                                    field.type,
                                                                                    field.length))
                     field_alias = field_alias_dictionary.get(dataset, {}).get(field.name, DEFAULT)
-                    print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
-                    arcpy.AlterField_management(in_table=dataset_out,
-                                                field=field.name,
-                                                new_field_alias=field_alias)
+                    if field_alias is not None:
+                        print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
+                        arcpy.AlterField_management(in_table=dataset_out,
+                                                    field=field.name,
+                                                    new_field_alias=field_alias)
             print('\t\t\tAdded field aliases.')
 
     #
     print('Copied datasets.')
 
 
+# Capture end_time
+end_time = time.time()
+
+
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
+
+
+# Print script filename, finish date and time
+print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
+                                                 datetime.datetime.now().strftime('%H:%M:%S'),
+                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
 
 
 sys.exit()
@@ -576,445 +586,6 @@ sys.exit()
 
 
 
-copy_datasets = True
-
-
-if copy_datasets:
-    # Copy CS ArcSDE datasets to file geodatabase datasets
-    print('\n\nCopying datasets...')
-    #
-    # Copy the BLKDATA feature class
-    # Define input_dataset
-    dataset = r'BLKDATA'
-    dataset_in = arcsde_cs_restored + '\\' +\
-                 arcsde_user_cs_restored + '.' +\
-                 arcsde_feature_dataset_cs_restored + '\\' +\
-                 dataset
-    #Define output dataset
-    dataset_out = os.path.join(fgdb, dataset)
-    #  Display input and output dataset paths
-    print('\t\tdataset_in:\t\t{0}'.format(dataset_in))
-    print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-    # Delete out dataset if it already exists
-    if arcpy.Exists(dataset_out):
-        arcpy.Delete_management(in_data=dataset_out,
-                                data_type='')
-    # Create empty feature class
-    desc = arcpy.Describe(dataset_in)
-    dataType = desc.dataType
-    print('\t\t\tdataType:\t\t{0}'.format(dataType))
-    shapeType = desc.shapeType
-    print('\t\t\tshapeType:\t\t{0}'.format(shapeType))
-    arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
-                                        out_name=os.path.basename(dataset_out),
-                                        geometry_type=shapeType,
-                                        spatial_reference=arcpy.SpatialReference(27700))
-    fields = arcpy.ListFields(dataset_out)
-    print('\t\tListing fields in out feature class and creating in new feature class...')
-    fields = arcpy.ListFields(dataset_in)
-    for field in fields:
-        if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN', 'BLKDATA_GUID']:
-            print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-                                                                           field.type,
-                                                                           field.length))
-            field_alias = field_alias_dictionary.get(dataset, {}).get(field.name, DEFAULT)
-            print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
-            arcpy.AddField_management(in_table=dataset_out,
-                                      field_name=field.name,
-                                      field_type=field.type,
-                                      field_precision=field.precision,
-                                      field_scale=field.scale,
-                                      field_length=field.length,
-                                      field_alias=field_alias,
-                                      field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
-                                      field_is_required=field.required,
-                                      field_domain=field.domain)
-    del field, fields
-    print('\t\tListed fields in out feature class and created in new feature class.')
-    # Append data from out dataset to new dataset
-    print('\t\tAppending rows from in feature class to out feature class...')
-    arcpy.Append_management(inputs=[dataset_in],
-                            target=dataset_out,
-                            schema_type='NO_TEST')
-    print('\t\tAppended rows from in feature class to out feature class.')
-    #
-    # Delete non-CS2007 fields from BLKDATA feature class
-    print('\t\tDeleting non-CS2007 fields from BLKDATA feature class...')
-    drop_fields = ['EXTENT', 'FOREST', 'CREATE_ID']
-    print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
-    arcpy.DeleteField_management(in_table=dataset_out,
-                                 drop_field=drop_fields)
-    del drop_fields
-    print('\t\tDeleted non-CS2007 fields from BLKDATA feature class.')
-    #
-    # Add Editor and Date of edit fields to BLKDATA feature class
-    print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
-    arcpy.AddField_management(in_table=dataset_out,
-                              field_name='EDITOR',
-                              field_type='TEXT',
-                              field_precision='',
-                              field_scale='',
-                              field_length=25,
-                              field_alias='Editor',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    arcpy.AddField_management(in_table=dataset_out,
-                              field_name='DATE_OF_EDIT',
-                              field_type='DATE',
-                              field_precision='',
-                              field_scale='',
-                              field_length='',
-                              field_alias='Date of edit',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\t\tAdded Editor and Date of Edit fields to {0} feature class.'.format(dataset_out))
-    #
-    # Copy CS ArcSDE datasets and their related tables
-    for dataset in data_dictionary.keys():
-        print('\tdataset:\t\t{0}'.format(dataset))
-        #
-        # Define input dataset
-        if dataset in ('SCPTDATA', 'LINEARDATA'):
-            dataset_in = arcsde_cs_restored + '\\' +\
-                         arcsde_user_cs_restored + '.' +\
-                         arcsde_feature_dataset_cs_restored + '\\' +\
-                         dataset
-        elif dataset in ('POINTDATA'):
-            dataset_in = arcsde_cs_original + '\\' +\
-                         arcsde_user_cs_original + '.' +\
-                         dataset
-        elif dataset in ('EVENTDATA'):
-            dataset_in = arcsde_cs_restored + '\\' +\
-                         arcsde_user_cs_restored + '.' +\
-                         dataset
-        else:
-            sys.exit('\n\ndataset {0} not coded for!!!\n\n'.format(dataset))
-        #
-        # Define output dataset
-        dataset_out = os.path.join(fgdb, dataset)
-        #
-        #  Display input and output dataset paths
-        print('\t\tdataset_in:\t\t{0}'.format(dataset_in))
-        print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-        #
-        # Create new feature class
-        if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Only copy feature classes as EVENTDATA related table will be copied as the related table of the LINEARDATA feature class
-            #
-            #  Delete out dataset if it already exists
-            if arcpy.Exists(dataset_out):
-                arcpy.Delete_management(in_data=dataset_out,
-                                        data_type='')
-            #
-            # Create empty feature class
-            desc = arcpy.Describe(dataset_in)
-            dataType = desc.dataType
-            print('\t\t\tdataType:\t\t{0}'.format(dataType))
-            shapeType = desc.shapeType
-            print('\t\t\tshapeType:\t\t{0}'.format(shapeType))
-            arcpy.CreateFeatureclass_management(out_path=os.path.dirname(dataset_out),
-                                                out_name=os.path.basename(dataset_out),
-                                                geometry_type=shapeType,
-                                                spatial_reference=arcpy.SpatialReference(27700))
-            fields = arcpy.ListFields(dataset_out)
-            # for field in fields:
-            #     print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-            #                                                                    field.type,
-            #                                                                    field.length))
-            # del field, fields
-            #
-            # List fields in dataset_in and create fields in dataset_out
-            print('\t\tListing fields in out feature class and creating in new feature class...')
-            fields = arcpy.ListFields(dataset_in)
-            for field in fields:
-                if field.name not in ['OBJECTID', 'SHAPE', 'SHAPE.AREA', 'SHAPE.LEN']:
-                    print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-                                                                                   field.type,
-                                                                                   field.length))
-                    # print('\t\t\t\t{0} {1} nullable'.format(field.name,
-                    #                                         'is' if field.isNullable else 'is not'))
-                    # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
-                    #                                                      field.domain))
-                    # print('\t\t\t\t{0} {1} required'.format(field.name,
-                    #                                         'is' if field.required else 'is not'))
-                    field_alias = field_alias_dictionary.get(dataset, {}).get(field.name, DEFAULT)
-                    print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
-                    arcpy.AddField_management(in_table=dataset_out,
-                                              field_name=field.name,
-                                              field_type=field.type,
-                                              field_precision=field.precision,
-                                              field_scale=field.scale,
-                                              field_length=field.length,
-                                              field_alias=field_alias,
-                                              field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
-                                              field_is_required=field.required,
-                                              field_domain=field.domain)
-            del field, fields
-            print('\t\tListed fields in out feature class and created in new feature class.')
-            #
-            # Append data from out dataset to new dataset
-            print('\t\tAppending rows from in feature class to out feature class...')
-            arcpy.Append_management(inputs=[dataset_in],
-                                    target=dataset_out,
-                                    schema_type='TEST')
-            print('\t\tAppended rows from in feature class to out feature class.')
-            #
-            # Delete non-CS2007 fields from feature class
-            print('\t\tDeleting non-CS2007 fields from {0} feature class...'.format(dataset))
-            if dataset == 'SCPTDATA':
-                drop_fields = ['SCPT', 'FORP', 'COVA', 'COFC', 'HABT', 'AMAW', 'SOIL', 'TCON', 'TRGH', 'TSLP',
-                               'CULT', 'GRAZED_SWARD', 'CANOPY_FRAGMENTATION', 'MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'MAPCODE_HA', 'CPMT', 'BLK',
-                               'FOREST', 'ALTD', 'THIN_STATUS', 'INVALID_THIN', 'CPTDATA_ID', 'THINCOUPE_ID', 'CREATE_ID', 'CANOPY_COVERP', 'NATIVE_SPIS_IN_CANOPYP', 'SEMI_NATURALP',
-                               'PLANTEDP', 'POACHED_GROUND', 'SPATIAL_ERROR']
-            elif dataset == 'LINEARDATA':
-                drop_fields = ['BLKDATA_ID', 'CREATE_ID']
-            elif dataset == 'POINTDATA':
-                drop_fields = ['MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID', 'CPTDATA_ID']
-            else:
-                sys.exit('\n\nFeature class {0} not coded for when trying to drop fields!!!\n\n'.format(dataset))
-            print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
-            arcpy.DeleteField_management(in_table=dataset_out,
-                                         drop_field=drop_fields)
-            del drop_fields
-            print('\t\tDeleted non-CS2007 fields from {0} feature class.'.format(dataset))
-            #
-            # Add Editor and Date of edit fields to feature class
-            print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
-            arcpy.AddField_management(in_table=dataset_out,
-                                      field_name='EDITOR',
-                                      field_type='TEXT',
-                                      field_precision='',
-                                      field_scale='',
-                                      field_length=25,
-                                      field_alias='Editor',
-                                      field_is_nullable='NULLABLE',
-                                      field_is_required='NON_REQUIRED',
-                                      field_domain='')
-            arcpy.AddField_management(in_table=dataset_out,
-                                      field_name='DATE_OF_EDIT',
-                                      field_type='DATE',
-                                      field_precision='',
-                                      field_scale='',
-                                      field_length='',
-                                      field_alias='Date of edit',
-                                      field_is_nullable='NULLABLE',
-                                      field_is_required='NON_REQUIRED',
-                                      field_domain='')
-            print('\t\tAdded Editor and Date of Edit fields to {0} feature class.'.format(dataset_out))
-        #
-        # Get related table from data dictionary
-        related_table = data_dictionary[dataset]['related_table']
-        print('\t\trelated_table:\t\t{0}'.format(related_table))
-        #
-        #  Define input related table
-        if related_table == 'PCOMPDATA':
-            related_table_in = arcsde_cs_original + '\\' +\
-                               arcsde_user_cs_original +'.' +\
-                               related_table
-        else:
-            related_table_in = arcsde_cs_restored + '\\' +\
-                               arcsde_user_cs_restored + '.' +\
-                               related_table
-        #
-        #  Define output related table
-        related_table_out = os.path.join(fgdb, related_table)
-        #
-        # Display input and output related table paths
-        print('\t\t\trelated_table_in:\t\t{0}'.format(related_table_in))
-        print('\t\t\trelated_table_out:\t\t{0}'.format(related_table_out))
-        #
-        #  Delete out related table if it already exists
-        if arcpy.Exists(related_table_out):
-            arcpy.Delete_management(in_data=related_table_out,
-                                    data_type='')
-        #
-        # Create empty table
-        desc = arcpy.Describe(related_table_in)
-        dataType = desc.dataType
-        print('\t\t\tdataType:\t\t{0}'.format(dataType))
-        arcpy.CreateTable_management(out_path=os.path.dirname(related_table_out),
-                                     out_name=os.path.basename(related_table_out))
-        #
-        # List fields in dataset_in and create fields in dataset_out
-        print('\t\tListing fields in out feature class and creating in new feature class...')
-        fields = arcpy.ListFields(related_table_in)
-        for field in fields:
-            if field.name not in ['OBJECTID']:
-                print('\t\t\t{0} is a type of {1} with a length of {2}'.format(field.name,
-                                                                               field.type,
-                                                                               field.length))
-                # print('\t\t\t\t{0} {1} nullable'.format(field.name,
-                #                                         'is' if field.isNullable else 'is not'))
-                # print('\t\t\t\t{0} has associated domain {1} ?????'.format(field.name,
-                #                                                      field.domain))
-                # print('\t\t\t\t{0} {1} required'.format(field.name,
-                #                                         'is' if field.required else 'is not'))
-                field_alias = field_alias_dictionary.get(related_table, {}).get(field.name, DEFAULT)
-                print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
-                arcpy.AddField_management(in_table=related_table_out,
-                                          field_name=field.name,
-                                          field_type=field.type,
-                                          field_precision=field.precision,
-                                          field_scale=field.scale,
-                                          field_length=field.length,
-                                          field_alias=field_alias,
-                                          field_is_nullable='NULLABLE',  # field_is_nullable=field.isNullable,
-                                          field_is_required=field.required,
-                                          field_domain=field.domain)
-        del field, fields
-        print('\t\tListed fields in out feature class and created in new feature class.')
-        #
-        # Append data from out dataset to new dataset
-        print('\t\tAppending rows from in related table to out related table...')
-        arcpy.Append_management(inputs=[related_table_in],
-                                target=related_table_out,
-                                schema_type='TEST')
-        print('\t\tAppended rows from in related table to out related table.')
-        #
-        # Delete non-CS2007 fields from related table
-        print('\t\tDeleting non-CS2007 fields from {0} related table...'.format(related_table))
-        if related_table == 'COMPDATA':
-            drop_fields = ['SCPT', 'SPIS', 'ORIG', 'PROP', 'ROTN', 'MIXT', 'MODEL', 'STOP', 'FCST', 'EXTLUSE',
-                           'HABT_CONDITION', 'LANDSCAPE_TYPE', 'STRUCTURE', 'BARK_STRIP_FRAYING', 'CPMT', 'PLYR', 'STOCK', 'SDATE', 'DISP', 'BLK',
-                           'FOREST', 'STRY', 'YLDC', 'SPNUM', 'THCY', 'DFST', 'DNXT', 'VOLP', 'VOLT', 'DBHP',
-                           'CREATE_ID', 'COMP_NUM', 'SPACING', 'WHCL', 'DBH_CLASS', 'FIRST_GRADEP', 'SECOND_GRADEP', 'THIRD_GRADEP', 'WOODLAND_LOSS_TYPE', 'WOODLAND_LOSS_CAUSE',
-                           'BROWSING_RATE', 'BROWSELINE', 'BASAL_SHOOTS']
-        elif related_table == 'EVENTDATA':
-            drop_fields = ['MAPCODE_BD', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID']
-        elif related_table == 'SEVENTDATA':
-            drop_fields = ['CREATE_ID']
-        elif related_table == 'PCOMPDATA':
-            drop_fields = ['CREATE_ID']
-        else:
-            sys.exit('\n\nRelated table {0} not coded for when trying to drop fields!!!\n\n'.format(related_table))
-        print('\t\t\tdrop_fields:\t\t{0}'.format(drop_fields))
-        arcpy.DeleteField_management(in_table=related_table_out,
-                                     drop_field=drop_fields)
-        del drop_fields
-        print('\t\tDeleted non-CS2007 fields from {0} related table.'.format(related_table))
-        #
-        # Add Editor and Date of edit fields to BLKDATA feature class
-        print('\t\tAdding Editor and Date of Edit fields to {0} feature class...'.format(dataset_out))
-        arcpy.AddField_management(in_table=related_table_out,
-                                  field_name='EDITOR',
-                                  field_type='TEXT',
-                                  field_precision='',
-                                  field_scale='',
-                                  field_length=25,
-                                  field_alias='Editor',
-                                  field_is_nullable='NULLABLE',
-                                  field_is_required='NON_REQUIRED',
-                                  field_domain='')
-        arcpy.AddField_management(in_table=related_table_out,
-                                  field_name='DATE_OF_EDIT',
-                                  field_type='DATE',
-                                  field_precision='',
-                                  field_scale='',
-                                  field_length='',
-                                  field_alias='Date of edit',
-                                  field_is_nullable='NULLABLE',
-                                  field_is_required='NON_REQUIRED',
-                                  field_domain='')
-        print('\t\tAdded Editor and Date of Edit fields to {0} feature class.'.format(dataset_out))
-    #
-    # Add Point_Proximity field to POINTDATA feature class
-    print('\tAdding Point_Proximity field to POINTDATA feature class...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'POINTDATA'),
-                              field_name='Point_Proximity',
-                              field_type='TEXT',
-                              field_precision='',
-                              field_scale='',
-                              field_length=10,
-                              field_alias='',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded Point_Proximity field to POINTDATA feature class.')
-    #
-    # Add Polygon_Area field to SCPTDATA feature class
-    print('\tAdding Polygon_Area field to SCPTDATA feature class...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'SCPTDATA'),
-                              field_name='Polygon_Area',
-                              field_type='FLOAT',
-                              field_precision=12,
-                              field_scale=3,
-                              field_length='',
-                              field_alias='',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded Polygon_Area field to SCPTDATA feature class.')
-    print('\tCalculating Polygon_Area...')
-    arcpy.CalculateField_management(in_table=os.path.join(fgdb, 'SCPTDATA'),
-                                    field='Polygon_Area',
-                                    expression='!shape.area@SQUAREMETERS!',
-                                    expression_type='PYTHON',
-                                    code_block='#')
-    print('\tCalculated Polygon_Area.')
-    #
-    # Add Linear_Length field to LINEARDATA feature class
-    print('\tAdding Linear_Length field to LINEARDATA feature class...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'LINEARDATA'),
-                              field_name='Linear_Length',
-                              field_type='FLOAT',
-                              field_precision=12,
-                              field_scale=3,
-                              field_length='',
-                              field_alias='',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded Linear_Length field to LINEARDATA feature class.')
-    print('\tCalculating Linear_Length...')
-    arcpy.CalculateField_management(in_table=os.path.join(fgdb, 'LINEARDATA'),
-                                    field='Linear_Length',
-                                    expression='!shape.length@METERS!',
-                                    expression_type='PYTHON',
-                                    code_block='#')
-    print('\tCalculated Linear_Length.')
-
-    #
-    # Add CONDITION, DISEASE_SIGNS and HABITAT_BOXES fields to PCOMPDATA related table
-    print('\tAdding CONDITION field to PCOMPDATA related table...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
-                              field_name='CONDITION',
-                              field_type='SHORT',
-                              field_precision=3,
-                              field_scale='',
-                              field_length='',
-                              field_alias='Condition',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded CONDITION field to PCOMPDATA feature class.')
-    print('\tAdding DISEASE_SIGNS field to PCOMPDATA related table...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
-                              field_name='DISEASE_SIGNS',
-                              field_type='SHORT',
-                              field_precision=3,
-                              field_scale='',
-                              field_length='',
-                              field_alias='Signs of disease',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded DISEASE_SIGNS field to PCOMPDATA feature class.')
-    print('\tAdding HABITAT_BOXES field to PCOMPDATA related table...')
-    arcpy.AddField_management(in_table=os.path.join(fgdb, 'PCOMPDATA'),
-                              field_name='HABITAT_BOXES',
-                              field_type='SHORT',
-                              field_precision=3,
-                              field_scale='',
-                              field_length='',
-                              field_alias='Habitat boxes',
-                              field_is_nullable='NULLABLE',
-                              field_is_required='NON_REQUIRED',
-                              field_domain='')
-    print('\tAdded HABITAT_BOXES field to PCOMPDATA feature class.')
-
-    #
-    print('Copied datasets.')
 
 
 add_guids = True
