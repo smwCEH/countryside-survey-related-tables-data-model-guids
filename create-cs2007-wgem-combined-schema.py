@@ -251,21 +251,34 @@ print('\t{0}'.format(alias))
 print('\t#\nCreated dictionary to hold field aliases.')
 
 
-# Define file geodatabase
+# Define BritishNationalGrid_100km feature class
+bng_100km = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB CEHCORP CORPADMIN.sde\CORPADMIN.BritishNationalGrid_100km'
+print('\n\nbng_100km:\t\t{0}'.format(bng_100km))
+
+
+# Create combined file geodatabase if it doesn't already exist
+print('\n\nCreating combined file geodatabase...')
 fgdb = r'E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
-print('\n\nfgdb:\t\t\{0}'.format(fgdb))
-
-
-# Create file geodatabase if it doesn't already exist
+print('\tfgdb:\t\t\{0}'.format(fgdb))
 if not arcpy.Exists(dataset=fgdb):
     arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb),
                                    out_name=os.path.basename(fgdb),
                                    out_version='')
+print('Created combined file geodatabase.')
 
 
-# Define BritishNationalGrid_100km feature class
-bng_100km = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB CEHCORP CORPADMIN.sde\CORPADMIN.BritishNationalGrid_100km'
-print('\n\nbng_100km:\t\t{0}'.format(bng_100km))
+# Create temporary SDE file geodatabases if they don't already exist
+print('\n\nCreating temporary SDE file geodatabases...')
+for sde in sde_dictionary.keys():
+    print('\t{0}'.format(sde))
+    temp_fgdb = os.path.join(os.path.dirname(fgdb),
+                             os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
+    print('\t\ttemp_fgdb:\t\t{0}'.format(temp_fgdb))
+    if not arcpy.Exists(dataset=temp_fgdb):
+        arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(temp_fgdb),
+                                       out_name=os.path.basename(temp_fgdb),
+                                       out_version='')
+print('Created temporary SDE file geodatabases.')
 
 
 copy_datasets = True
@@ -273,9 +286,15 @@ copy_datasets = True
 
 if copy_datasets:
     print('\n\nCopying datasets...')
-    #
+    # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
         print('\t{0}'.format(sde))
+        temp_fgdb = os.path.join(os.path.dirname(fgdb),
+                                 os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
+        # Set arcpy.env.workspace to temporary SDE file geodatabase
+        arcpy.env.workspace = temp_fgdb
+        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
+        # Loop  through feature classes and related tables
         for dataset in sde_dictionary[sde]['copy_datasets']:
             print('\t\t{0}'.format(dataset))
             # Define in dataset
@@ -307,8 +326,7 @@ if copy_datasets:
                 shapeType = None
             print('\t\t\tshapeType:\t\t\t{0}'.format(shapeType))
             # Define out dataset
-            dataset_out = sde + '_' + dataset
-            dataset_out = os.path.join(fgdb, dataset_out)
+            dataset_out = dataset + '_' + sde
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
             # Delete out dataset if it already exists
             if arcpy.Exists(dataset=dataset_out):
@@ -329,6 +347,16 @@ if copy_datasets:
                                              template=dataset_in)
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
+
+            # Delete non-CS2007 fields
+            print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'],
+                                                                                dataset_out))
+            print('\t\t\t\tdrop_fields:\t\t{0}'.format(data_dictionary[dataset]['drop_fields']))
+            arcpy.DeleteField_management(in_table=dataset_out,
+                                         drop_field=data_dictionary[dataset]['drop_fields'])
+            print('\t\t\tDeleted non-CS2007 fields from out {0} {1}.'.format(data_dictionary[dataset]['type'],
+                                                                             dataset_out))
+
             # Append data from in dataset to out dataset
             print('\t\t\tAppending rows from in {0} {1} to out {0} {2}...'.format(data_dictionary[dataset]['type'],
                                                                                   dataset_in,
@@ -383,11 +411,10 @@ if copy_datasets:
                 result = arcpy.GetCount_management(in_rows=dataset_out)
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
-                # del result, count
-                # del where_clause
-                # del fl_bng_100km
-                # arcpy.Delete_management(featurelayer)
-                # del featurelayer
+                # Recalculate the feature class extent
+                print('\t\t\t\tRe-calculating the extent of feature class {0}...'.format(dataset_out))
+                arcpy.RecalculateFeatureClassExtent_management(in_features=dataset_out)
+                print('\t\t\t\tRe-calculated the extent of feature class {0}.'.format(dataset_out))
                 print('\t\t\tRemoved non-Welsh data from feature class.')
             # Delete non-Welsh data from the WGEM tables
             if sde == 'WGEM' and dataset in ('COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA'):
@@ -401,9 +428,9 @@ if copy_datasets:
                 id_field = data_dictionary[parent_table]['id_field']
                 where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out,
                                                                                                   field=id_field),
-                                                                         arcpy.AddFieldDelimiters(datasource=sde + '_' + parent_table,
+                                                                         arcpy.AddFieldDelimiters(datasource=parent_table + '_' + sde,
                                                                                                   field=id_field),
-                                                                         sde + '_' + parent_table)
+                                                                         parent_table + '_' + sde)
                 print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
                 arcpy.MakeTableView_management(in_table=dataset_out,
                                                out_view=tableview,
@@ -417,11 +444,21 @@ if copy_datasets:
                 result = arcpy.GetCount_management(in_rows=dataset_out)
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
-                # del result, count
-                # del where_clause
-                # arcpy.Delete_management(tableview)
-                # del tableview
                 print('\t\t\tRemoved non-Welsh data from table.')
+            # Set VISIT_STATUS and REASON_FOR_CHANGE to Null in SCPTDATA and POINTDATA feature class and EVENTDATA related table
+            if dataset in ('SCPTDATA', 'POINTDATA', 'EVENTDATA'):
+                for null_field in ('VISIT_STATUS', 'REASON_FOR_CHANGE'):
+                    print('\t\t\tSetting {0} to <Null> in {1} {2}...'.format(null_field,
+                                                                             dataset_out,
+                                                                             data_dictionary[dataset]['type']))
+                    arcpy.CalculateField_management(in_table=dataset_out,
+                                                    field=null_field,
+                                                    expression='None',
+                                                    expression_type='PYTHON',
+                                                    code_block='')
+                    print('\t\t\tSet {0} to <Null> in {1} {2}.'.format(null_field,
+                                                                           dataset_out,
+                                                                           data_dictionary[dataset]['type']))
             # Add any additional fields to feature classes and related tables
             print('\t\t\tAdding additional fields...')
             # Add Point_Proximity field to POINTDATA feature class
@@ -561,8 +598,6 @@ if copy_datasets:
                                                     field=field.name,
                                                     new_field_alias=field_alias)
             print('\t\t\tAdded field aliases.')
-
-    #
     print('Copied datasets.')
 
 
