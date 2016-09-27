@@ -102,7 +102,7 @@ data_dictionary['SCPTDATA']['parent_table'] = None
 data_dictionary['COMPDATA'] = {}
 data_dictionary['COMPDATA']['type'] = 'Table'
 data_dictionary['COMPDATA']['id_field'] = 'COMPDATA_ID'
-data_dictionary['COMPDATA']['guid_field'] = 'SCPTDATA_GUID'
+data_dictionary['COMPDATA']['guid_field'] = 'COMPDATA_GUID'
 data_dictionary['COMPDATA']['drop_fields'] = ['SCPT', 'SPIS', 'ORIG', 'PROP', 'ROTN', 'MIXT', 'MODEL', 'STOP', 'FCST', 'EXTLUSE',
                                               'HABT_CONDITION', 'LANDSCAPE_TYPE', 'STRUCTURE', 'BARK_STRIP_FRAYING', 'CPMT', 'PLYR', 'STOCK', 'SDATE', 'DISP', 'BLK',
                                               'FOREST', 'STRY', 'YLDC', 'SPNUM', 'THCY', 'DFST', 'DNXT', 'VOLP', 'VOLT', 'DBHP',
@@ -288,6 +288,7 @@ if copy_datasets:
     print('\n\nCopying datasets...')
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
+    # for sde in ['CS_ORIGINAL']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -600,6 +601,7 @@ if add_guids:
     print('\n\nAdding GUID fields to feature classes and related tables...')
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
+    # for sde in ['CS_ORIGINAL']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -674,12 +676,12 @@ if add_guids:
         # Join GUIDs to related table
         print('\t\tJoining GUID fields to related tables...')
         related_tables = sde_dictionary[sde]['copy_datasets']
-        print('related_tables:\t\t{0}'.format(related_tables))
+        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
         parent_tables = ['BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA']
         for parent_table in parent_tables:
             if parent_table in related_tables:
                 related_tables.remove(parent_table)
-        print('related_tables:\t\t{0}'.format(related_tables))
+        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
         for related_table in related_tables:
             print('\t\t\trelated_table:\t\t{0}'.format(related_table))
             in_data = related_table + '_' + sde
@@ -735,102 +737,109 @@ check_guids = True
 if check_guids:
     # Checking GUID fields in related file geodatabase datasets
     print('\n\nChecking GUID fields in related datasets...')
-    #
     # Set sample size
-    sample_size = 25
-    print('sample_size:\t\t{0}'.format(sample_size))
-    #
-    for dataset in data_dictionary.keys():
-    # for dataset in ['SCPTDATA']:
-        print('\tdataset:\t\t{0}'.format(dataset))
-        #
-        # Define output dataset
-        dataset_out = os.path.join(fgdb, dataset)
-        print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
-        #
-        # Get ID field name from data dictionary
-        id_field = data_dictionary[dataset]['id_field']
-        print('\t\tid_field:\t\t{0}'.format(id_field))
-        #
-        # Get GUID field name from data dictionary
-        guid_field = data_dictionary[dataset]['guid_field']
-        print('\t\tguid_field:\t\t{0}'.format(guid_field))
-        #
-        # Get related table from data dictinary
-        related_table = data_dictionary[dataset]['related_table']
-        related_table = os.path.join(fgdb, related_table)
-        print('\t\trelated_table:\t\t{0}'.format(related_table))
-        #
-        # Get GUIDS from file geodatabase dataset
-        object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=dataset_out,
-                                                          field_names=['OID@'])]
-        # print('object_ids:\t{0}'.format(object_ids))
-        print('\t\tlen(object_ids):\t{0}\n\t\tsample_size:\t{1}'.format(len(object_ids), sample_size))
-        random_ids = random.sample(object_ids, sample_size)
-        random_ids = sorted(random_ids, key=int, reverse=False)
-        # print('\t\trandom_ids:\t{0}'.format(random_ids))
-        oid_field = arcpy.Describe(dataset_out).OIDFieldName
-        # print('\t\toid_field:\t{0}'.format(oid_field))
-        where_clause = '"{0}" IN ({1})'.format(oid_field, ','.join(map(str, random_ids)))
-        # print('\t\twhere_clause:\t{0}'.format(where_clause))
-        rows = [row for row in arcpy.da.SearchCursor(in_table=dataset_out,
-                                                     field_names=['OID@', id_field, guid_field],
-                                                     where_clause=where_clause,
-                                                     sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
-        row_count = len(rows)
-        del rows
-        print('\t\trow_count:\t\t{0}'.format(row_count))
-        if row_count != sample_size:
-            sys.exit('\n\nrow count != sample_size!!!\n\n')
-        count = 0
-        sample_list = []
-        with arcpy.da.SearchCursor(in_table=dataset_out,
-                                   field_names=['OID@', id_field, guid_field],
-                                   where_clause=where_clause,
-                                   sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
-            for row in cursor:
-                count += 1
-                print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}'.format(count,
-                                                                          row[0],
-                                                                          row[1],
-                                                                          row[2]))
-                sample_list.append([row[0], row[1], row[2]])
-        # print('\t\tsample_list:\t{0}'.format(sample_list))
-        for sample in sample_list:
-            # print(sample)
-            print('\t\tid:\t\t\t{0}'.format(sample[1]))
-            print('\t\tguid:\t\t{0}'.format(sample[2]))
-            where_clause = '"{0}" = ({1})'.format(id_field, sample[1])
-            # print('\t\twhere_clause:\t{0}'.format(where_clause))
-            count = 0
-            rows = [row for row in arcpy.da.SearchCursor(in_table=related_table,
+    sample_size = 10
+    print('\tsample_size:\t\t{0}'.format(sample_size))
+    # Loop through SDE geodatabases
+    for sde in sde_dictionary.keys():
+    # for sde in ['CS_ORIGINAL']:
+        print('\t{0}'.format(sde))
+        temp_fgdb = os.path.join(os.path.dirname(fgdb),
+                                 os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
+        # Set arcpy.env.workspace to temporary SDE file geodatabase
+        arcpy.env.workspace = temp_fgdb
+        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
+        # Loop through feature classes and related tables
+        print(sde_dictionary[sde])
+        parent_tables = sde_dictionary[sde]['copy_datasets']
+        print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
+        child_tables = ['BLKDATA', 'COMPDATA', 'SEVENTDATA', 'PCOMPDATA']
+        for child_table in child_tables:
+            if child_table in parent_tables:
+                parent_tables.remove(child_table)
+        print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
+
+        for parent_table in parent_tables:
+            print('\t\t{0}'.format(parent_table))
+            # Define out dataset
+            dataset_out = parent_table + '_' + sde
+            print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
+            # Define ID field
+            id_field = data_dictionary[parent_table]['id_field']
+            print('\t\t\tid_field:\t\t\t{0}'.format(id_field))
+            # Define GUID field
+            guid_field = data_dictionary[parent_table]['guid_field']
+            print('\t\t\tguid_field:\t\t\t{0}'.format(guid_field))
+            # Define child table
+            child_table = data_dictionary[parent_table]['child_table']
+            child_table = child_table + '_' + sde
+            print('\t\t\tchild_table:\t\t{0}'.format(child_table))
+            # Get GUIDS from file geodatabase dataset
+            object_ids = [r[0] for r in arcpy.da.SearchCursor(in_table=dataset_out,
+                                                              field_names=['OID@'])]
+            # print('object_ids:\t{0}'.format(object_ids))
+            print('\t\t\tlen(object_ids):\t{0}\n\t\t\tsample_size:\t\t{1}'.format(len(object_ids), sample_size))
+            random_ids = random.sample(object_ids, sample_size)
+            random_ids = sorted(random_ids, key=int, reverse=False)
+            # print('\t\trandom_ids:\t{0}'.format(random_ids))
+            oid_field = arcpy.Describe(dataset_out).OIDFieldName
+            # print('\t\toid_field:\t{0}'.format(oid_field))
+            where_clause = '"{0}" IN ({1})'.format(oid_field, ','.join(map(str, random_ids)))
+            print('\t\t\twhere_clause:\t{0}'.format(where_clause))
+            rows = [row for row in arcpy.da.SearchCursor(in_table=dataset_out,
                                                          field_names=['OID@', id_field, guid_field],
                                                          where_clause=where_clause,
                                                          sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
             row_count = len(rows)
-            print('\t\trow_count:\t\t{0}'.format(row_count))
             del rows
-            with arcpy.da.SearchCursor(in_table=related_table,
+            print('\t\t\trow_count:\t\t\t{0}'.format(row_count))
+            if row_count != sample_size:
+                sys.exit('\n\nrow count != sample_size!!!\n\n')
+            count = 0
+            sample_list = []
+            with arcpy.da.SearchCursor(in_table=dataset_out,
                                        field_names=['OID@', id_field, guid_field],
                                        where_clause=where_clause,
                                        sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
                 for row in cursor:
                     count += 1
-                    print('\t\trow:\t\t{0}'.format(row))
-                    print('\t\trow[2]:\t\t{0}'.format(row[2]))
-                    print('\t\tsample[2]:\t{0}'.format(sample[2]))
-                    if row[2] == sample[2]:
-                        compare = 'Yes'
-                    else:
-                        compare = 'No'
-                    print('\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}\t\t{4:>3}'.format(count, row[0], row[1], row[2], compare))
-            if count != row_count:
-                sys.exit('\n\ncount != row_count!!!\n\n')
-
-        #
-        time.sleep(1)
-        #
-    print('\n\nChecked GUID fields in related datasets.')
+                    print('\t\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}'.format(count,
+                                                                              row[0],
+                                                                              row[1],
+                                                                              row[2]))
+                    sample_list.append([row[0], row[1], row[2]])
+            # print('\t\tsample_list:\t{0}'.format(sample_list))
+            for sample in sample_list:
+                # print(sample)
+                print('\t\t\tid:\t\t\t{0}'.format(sample[1]))
+                print('\t\t\tguid:\t\t{0}'.format(sample[2]))
+                where_clause = '"{0}" = ({1})'.format(id_field, sample[1])
+                print('\t\t\twhere_clause:\t\t{0}'.format(where_clause))
+                count = 0
+                rows = [row for row in arcpy.da.SearchCursor(in_table=child_table,
+                                                             field_names=['OID@', id_field, guid_field],
+                                                             where_clause=where_clause,
+                                                             sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field))]
+                row_count = len(rows)
+                print('\t\t\trow_count:\t\t{0}'.format(row_count))
+                del rows
+                with arcpy.da.SearchCursor(in_table=child_table,
+                                           field_names=['OID@', id_field, guid_field],
+                                           where_clause=where_clause,
+                                           sql_clause=(None, 'ORDER BY ' + id_field + ', ' + guid_field)) as cursor:
+                    for row in cursor:
+                        count += 1
+                        print('\t\t\trow:\t\t{0}'.format(row))
+                        print('\t\t\trow[2]:\t\t{0}'.format(row[2]))
+                        print('\t\t\tsample[2]:\t{0}'.format(sample[2]))
+                        if row[2] == sample[2]:
+                            compare = 'Yes'
+                        else:
+                            compare = 'No'
+                        print('\t\t\t{0:<4}\t\t{1:>6}\t\t{2:>10}\t\t{3:>36}\t\t{4:>3}'.format(count, row[0], row[1], row[2], compare))
+                if count != row_count:
+                    sys.exit('\n\ncount != row_count!!!\n\n')
+    print('Checked GUID fields in related datasets.')
 
 
 
