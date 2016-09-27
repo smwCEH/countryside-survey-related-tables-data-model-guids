@@ -281,7 +281,7 @@ for sde in sde_dictionary.keys():
 print('Created temporary SDE file geodatabases.')
 
 
-copy_datasets = False
+copy_datasets = True
 
 
 if copy_datasets:
@@ -594,7 +594,7 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-add_guids = False
+add_guids = True
 
 
 if add_guids:
