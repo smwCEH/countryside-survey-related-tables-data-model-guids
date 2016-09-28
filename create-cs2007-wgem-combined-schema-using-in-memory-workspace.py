@@ -159,8 +159,8 @@ field_alias_dictionary['BLKDATA'] = {}
 field_alias_dictionary['BLKDATA']['BLK'] = 'CS Square'
 # sm_table_item_table = arcsde_cs_restored + '\\' +\
 #                       arcsde_user_cs_restored + '.' + 'SM_TABLE_ITEM'
-sm_table_item_table = sde_dictionary['CS_RESTORED']['connection_file'].copy() + '\\' +\
-                      sde_dictionary['CS_RESTORED']['user'].copy() + '.' + 'SM_TABLE_ITEM'
+sm_table_item_table = sde_dictionary['CS_RESTORED']['connection_file'] + '\\' +\
+                      sde_dictionary['CS_RESTORED']['user'] + '.' + 'SM_TABLE_ITEM'
 print('\t#\n\tsm_table_item_table:\t\t{0}'.format(sm_table_item_table))
 for dataset in data_dictionary.keys():
     if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Ignore EVENTDATA related table as will queried as the related table of the LINEARDATA feature class
@@ -180,7 +180,7 @@ for dataset in data_dictionary.keys():
                                                        search_row[2]))
                 field_alias_dictionary[dataset][search_row[1]]= search_row[2]
         del search_cursor, search_cursor_fields
-        related_table = data_dictionary[dataset]['child_table'].copy()
+        related_table = data_dictionary[dataset]['child_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         field_alias_dictionary[related_table] = {}
         search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
@@ -198,7 +198,7 @@ for dataset in data_dictionary.keys():
                 field_alias_dictionary[related_table][search_row[1]] = search_row[2]
         del search_cursor, search_cursor_fields
     if dataset in ('EVENTDATA'):  # Get SEVENTDATA
-        related_table = data_dictionary[dataset]['child_table'].copy()
+        related_table = data_dictionary[dataset]['child_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         field_alias_dictionary[related_table] = {}
         search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
@@ -256,7 +256,7 @@ print('\n\nbng_100km:\t\t{0}'.format(bng_100km))
 
 # Create combined file geodatabase if it doesn't already exist
 print('\n\nCreating combined file geodatabase...')
-fgdb = r'E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+fgdb = r'E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-{0}-in-memory.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 print('\tfgdb:\t\t\{0}'.format(fgdb))
 if not arcpy.Exists(dataset=fgdb):
     arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb),
@@ -279,12 +279,6 @@ for sde in sde_dictionary.keys():
 print('Created temporary SDE file geodatabases.')
 
 
-# Print sde_dictionary
-print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                   sort_keys=False,
-                                                   indent=4)))
-
-
 copy_datasets = True
 
 
@@ -295,27 +289,27 @@ if copy_datasets:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
-        # Set arcpy.env.workspace to temporary SDE file geodatabase
-        arcpy.env.workspace = temp_fgdb
-        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
+        # # Set arcpy.env.workspace to temporary SDE file geodatabase
+        # arcpy.env.workspace = temp_fgdb
+        # print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['datasets_to_copy'].copy():
+        for dataset in sde_dictionary[sde]['datasets_to_copy']:
             print('\t\t{0}'.format(dataset))
             # Define in dataset
             if sde_dictionary[sde]['FeatureDataset'] == None:
-                dataset_in = sde_dictionary[sde]['connection_file'].copy() +\
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
                              '\\' +\
                              dataset
             elif data_dictionary[dataset]['type'] == 'Table':
-                dataset_in = sde_dictionary[sde]['connection_file'].copy() +\
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
                              '\\' +\
                              dataset
             elif data_dictionary[dataset]['type'] == 'Feature Class':
-                dataset_in = sde_dictionary[sde]['connection_file'].copy() +\
+                dataset_in = sde_dictionary[sde]['connection_file'] +\
                              '\\' +\
-                             sde_dictionary[sde]['user'].copy() +\
+                             sde_dictionary[sde]['user'] +\
                              '.' +\
-                             sde_dictionary[sde]['FeatureDataset'].copy() +\
+                             sde_dictionary[sde]['FeatureDataset'] +\
                              '\\' +\
                              dataset
             else:
@@ -330,7 +324,7 @@ if copy_datasets:
                 shapeType = None
             print('\t\t\tshapeType:\t\t\t{0}'.format(shapeType))
             # Define out dataset
-            dataset_out = dataset + '_' + sde
+            dataset_out = 'in_memory' + '\\' + dataset + '_' + sde
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
             # Delete out dataset if it already exists
             if arcpy.Exists(dataset=dataset_out):
@@ -419,9 +413,9 @@ if copy_datasets:
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
                 tableview = 'tableview'
-                parent_table = data_dictionary[dataset]['parent_table'].copy()
+                parent_table = data_dictionary[dataset]['parent_table']
                 print('\t\t\t\tparent_table:\t\t{0}'.format(parent_table))
-                id_field = data_dictionary[parent_table]['id_field'].copy()
+                id_field = data_dictionary[parent_table]['id_field']
                 where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out,
                                                                                                   field=id_field),
                                                                          arcpy.AddFieldDelimiters(datasource=parent_table + '_' + sde,
@@ -594,13 +588,23 @@ if copy_datasets:
                                                     field=field.name,
                                                     new_field_alias=field_alias)
             print('\t\t\tAdded field aliases.')
+            # Copy in_memory dataset to file geodatabase
+            out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
+            arcpy.Copy_management(in_data=dataset_out,
+                                  out_data=out_data)
+            arcpy.Delete_management(dataset_out)
     print('Copied datasets.')
 
 
-# Print sde_dictionary
-print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                   sort_keys=False,
-                                                   indent=4)))
+# Capture end_time
+end_time = time.time()
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
+# Print script filename, finish date and time
+print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
+                                                 datetime.datetime.now().strftime('%H:%M:%S'),
+                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
+sys.exit()
 
 
 add_guids = True
@@ -617,13 +621,13 @@ if add_guids:
         arcpy.env.workspace = temp_fgdb
         print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['datasets_to_copy'].copy():
+        for dataset in sde_dictionary[sde]['datasets_to_copy']:
             print('\t\t{0}'.format(dataset))
             # Define out dataset
             dataset_out = dataset + '_' + sde
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
             # Define GUID field
-            guid_field = data_dictionary[dataset]['guid_field'].copy()
+            guid_field = data_dictionary[dataset]['guid_field']
             print('\t\t\tguid_field:\t\t{0}'.format(guid_field))
             # Add GUID field to output dataset if it doesn't already exist (Note: cannot delete required fields including GUIDs)
             if not arcpy.ListFields(dataset=dataset_out,
@@ -681,40 +685,28 @@ if add_guids:
             print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field,
                                                                                          data_dictionary[dataset]['type'].lower(),
                                                                                          dataset_out))
-
-        # Print sde_dictionary
-        print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                           sort_keys=False,
-                                                           indent=4)))
-
         # Join GUIDs to related table
         print('\t\tJoining GUID fields to related tables...')
         related_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
-        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
+        # print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
         parent_tables = ['BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA']
         for parent_table in parent_tables:
             if parent_table in related_tables:
                 related_tables.remove(parent_table)
-        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
-
-        # Print sde_dictionary
-        print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                           sort_keys=False,
-                                                           indent=4)))
-
+        print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
         for related_table in related_tables:
             print('\t\t\trelated_table:\t\t{0}'.format(related_table))
             in_data = related_table + '_' + sde
             print('\t\t\t\tin_data:\t\t{0}'.format(in_data))
-            parent_table = data_dictionary[related_table]['parent_table'].copy()
-            in_field = data_dictionary[parent_table]['id_field'].copy()
+            parent_table = data_dictionary[related_table]['parent_table']
+            in_field = data_dictionary[parent_table]['id_field']
             print('\t\t\t\tin_field:\t\t{0}'.format(in_field))
             join_table = parent_table + '_' + sde
             print('\t\t\t\tjoin_table:\t\t{0}'.format(join_table))
-            join_field = data_dictionary[parent_table]['id_field'].copy()
+            join_field = data_dictionary[parent_table]['id_field']
             print('\t\t\t\tjoin_field:\t\t{0}'.format(join_field))
-            fields = [data_dictionary[parent_table]['guid_field']].copy()
-            print('\t\t\t\tfields:\t\t{0}'.format(fields))
+            fields = [data_dictionary[parent_table]['guid_field']]
+            print('\t\t\t\tfields:\t\t\t{0}'.format(fields))
             arcpy.JoinField_management(in_data=in_data,
                                        in_field=in_field,
                                        join_table=join_table,
@@ -747,20 +739,8 @@ if add_guids:
                                                                                       data_dictionary[related_table]['type'].lower(),
                                                                                       in_data))
         # del index_name, guid_field, id_field, related_table_out, related_table, dataset_out, dataset, datasets
-
-        # Print sde_dictionary
-        print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                           sort_keys=False,
-                                                           indent=4)))
-
         print('\t\tJoined GUID fields to related tables.')
     print('Added GUID fields to feature classes and related tables.')
-
-
-# Print sde_dictionary
-print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                   sort_keys=False,
-                                                   indent=4)))
 
 
 check_guids = True
@@ -783,26 +763,25 @@ if check_guids:
         # Loop through feature classes and related tables
         print(sde_dictionary[sde])
         parent_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
-        print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
+        # print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
         child_tables = ['BLKDATA', 'COMPDATA', 'SEVENTDATA', 'PCOMPDATA']
         for child_table in child_tables:
             if child_table in parent_tables:
                 parent_tables.remove(child_table)
         print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
-
         for parent_table in parent_tables:
             print('\t\t{0}'.format(parent_table))
             # Define out dataset
             dataset_out = parent_table + '_' + sde
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
             # Define ID field
-            id_field = data_dictionary[parent_table]['id_field'].copy()
+            id_field = data_dictionary[parent_table]['id_field']
             print('\t\t\tid_field:\t\t\t{0}'.format(id_field))
             # Define GUID field
-            guid_field = data_dictionary[parent_table]['guid_field'].copy()
+            guid_field = data_dictionary[parent_table]['guid_field']
             print('\t\t\tguid_field:\t\t\t{0}'.format(guid_field))
             # Define child table
-            child_table = data_dictionary[parent_table]['child_table'].copy()
+            child_table = data_dictionary[parent_table]['child_table']
             child_table = child_table + '_' + sde
             print('\t\t\tchild_table:\t\t{0}'.format(child_table))
             # Get GUIDS from file geodatabase dataset
@@ -873,12 +852,6 @@ if check_guids:
     print('Checked GUID fields in related datasets.')
 
 
-# Print sde_dictionary
-print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
-                                                   sort_keys=False,
-                                                   indent=4)))
-
-
 # Capture end_time
 end_time = time.time()
 
@@ -908,10 +881,10 @@ if create_relationship_classes:
         dataset_out = os.path.join(fgdb, dataset)
         print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
         # Get related table from data dictionary
-        related_table = data_dictionary[dataset]['related_table'].copy()
+        related_table = data_dictionary[dataset]['related_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         # Get related table from data dictionary
-        guid_field = data_dictionary[dataset]['guid_field'].copy()
+        guid_field = data_dictionary[dataset]['guid_field']
         print('\t\tguid_field:\t\t\t{0}'.format(guid_field))
         # Define output related table path
         related_table_out = os.path.join(fgdb, related_table)
