@@ -588,45 +588,7 @@ if copy_datasets:
                                                     field=field.name,
                                                     new_field_alias=field_alias)
             print('\t\t\tAdded field aliases.')
-            # Copy in_memory dataset to file geodatabase
-            out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
-            arcpy.Copy_management(in_data=dataset_out,
-                                  out_data=out_data)
-            arcpy.Delete_management(dataset_out)
-    print('Copied datasets.')
 
-
-# Capture end_time
-end_time = time.time()
-# Report elapsed_time (= end_time - start_time)
-print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
-# Print script filename, finish date and time
-print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
-                                                 datetime.datetime.now().strftime('%H:%M:%S'),
-                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
-sys.exit()
-
-
-add_guids = True
-
-
-if add_guids:
-    print('\n\nAdding GUID fields to feature classes and related tables...')
-    # Loop through SDE geodatabases
-    for sde in sde_dictionary.keys():
-        print('\t{0}'.format(sde))
-        temp_fgdb = os.path.join(os.path.dirname(fgdb),
-                                 os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
-        # Set arcpy.env.workspace to temporary SDE file geodatabase
-        arcpy.env.workspace = temp_fgdb
-        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
-        # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['datasets_to_copy']:
-            print('\t\t{0}'.format(dataset))
-            # Define out dataset
-            dataset_out = dataset + '_' + sde
-            print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
-            # Define GUID field
             guid_field = data_dictionary[dataset]['guid_field']
             print('\t\t\tguid_field:\t\t{0}'.format(guid_field))
             # Add GUID field to output dataset if it doesn't already exist (Note: cannot delete required fields including GUIDs)
@@ -662,29 +624,82 @@ if add_guids:
             print('\t\t\tCalculated GUID field {0} in out {1} {2}.'.format(guid_field,
                                                                            data_dictionary[dataset]['type'].lower(),
                                                                            dataset_out))
+
+            # Copy in_memory dataset to file geodatabase
+            print('\t\t\tCopying in_memory dataset to file geodatabase...')
+            out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
+            print('\t\t\t\tout_data:\t\t{0}'.format(out_data))
+            if data_dictionary[dataset]['type'] == 'Feature Class':
+                arcpy.CopyFeatures_management(in_features=dataset_out,
+                                              out_feature_class=out_data)
+            elif data_dictionary[dataset]['type'] == 'Table':
+                # Create empty table
+                arcpy.CopyRows_management(in_rows=dataset_out,
+                                          out_table=out_data)
+            else:
+                sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
+            print('\t\t\tCopied in_memory dataset to file geodatabase.')
+            # # Delete in_memory dataset
+            # arcpy.Delete_management(dataset_out)
+
             # Add attribute index to newly added GUID field
             print('\t\t\tAdding attribute index to GUID field {0} in out {1} {2}...'.format(guid_field,
                                                                                             data_dictionary[dataset]['type'].lower(),
-                                                                                            dataset_out))
+                                                                                            out_data))
             index_name = guid_field + '_IDX'
-            if len(arcpy.ListIndexes(dataset=dataset_out,
+            if len(arcpy.ListIndexes(dataset=out_data,
                                      wild_card=index_name)) > 0:
                 print('\t\t\t\tDeleting attribute index {0} in out {1} {2}...'.format(index_name,
                                                                                       data_dictionary[dataset]['type'].lower(),
-                                                                                      dataset_out))
-                arcpy.RemoveIndex_management(in_table=dataset_out,
+                                                                                      out_data))
+                arcpy.RemoveIndex_management(in_table=out_data,
                                              index_name=index_name)
                 print('\t\t\t\tDeleted attribute index {0} in out {1} {2}.'.format(index_name,
                                                                                    data_dictionary[dataset]['type'].lower(),
-                                                                                   dataset_out))
-            arcpy.AddIndex_management(in_table=dataset_out,
+                                                                                   out_data))
+            arcpy.AddIndex_management(in_table=out_data,
                                       fields=guid_field,
                                       index_name=index_name,
                                       unique='UNIQUE',
                                       ascending='NON_ASCENDING')
             print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field,
                                                                                          data_dictionary[dataset]['type'].lower(),
-                                                                                         dataset_out))
+                                                                                         out_data))
+
+    print('Copied datasets.')
+
+
+# Capture end_time
+end_time = time.time()
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
+# Print script filename, finish date and time
+print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
+                                                 datetime.datetime.now().strftime('%H:%M:%S'),
+                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
+sys.exit()
+
+
+add_guids = True
+
+
+if add_guids:
+    print('\n\nAdding GUID fields to feature classes and related tables...')
+    # Loop through SDE geodatabases
+    for sde in sde_dictionary.keys():
+        print('\t{0}'.format(sde))
+        temp_fgdb = os.path.join(os.path.dirname(fgdb),
+                                 os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
+        # Set arcpy.env.workspace to temporary SDE file geodatabase
+        arcpy.env.workspace = temp_fgdb
+        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
+        # Loop through feature classes and related tables
+        for dataset in sde_dictionary[sde]['datasets_to_copy']:
+            print('\t\t{0}'.format(dataset))
+            # Define out dataset
+            dataset_out = dataset + '_' + sde
+            print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
+            # Define GUID field
         # Join GUIDs to related table
         print('\t\tJoining GUID fields to related tables...')
         related_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
