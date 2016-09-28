@@ -62,24 +62,22 @@ sde_dictionary['CS_ORIGINAL'] = {}
 sde_dictionary['CS_ORIGINAL']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde'
 sde_dictionary['CS_ORIGINAL']['user'] = r'CSADMIN'
 sde_dictionary['CS_ORIGINAL']['FeatureDataset'] = None
-sde_dictionary['CS_ORIGINAL']['copy_datasets'] = ['POINTDATA', 'PCOMPDATA']
+sde_dictionary['CS_ORIGINAL']['datasets_to_copy'] = ['POINTDATA', 'PCOMPDATA']
 sde_dictionary['CS_RESTORED'] = {}
 sde_dictionary['CS_RESTORED']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde'
 sde_dictionary['CS_RESTORED']['user'] = r'CS2007_ADMIN'
 sde_dictionary['CS_RESTORED']['FeatureDataset'] = r'ForesterData'
-sde_dictionary['CS_RESTORED']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
+sde_dictionary['CS_RESTORED']['datasets_to_copy'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA']
 sde_dictionary['WGEM'] = {}
 sde_dictionary['WGEM']['connection_file'] = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde'
 sde_dictionary['WGEM']['user'] = r'WGEMADMIN'
 sde_dictionary['WGEM']['FeatureDataset'] = r'ForesterData'
-sde_dictionary['WGEM']['copy_datasets'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA', 'POINTDATA', 'PCOMPDATA']
+sde_dictionary['WGEM']['datasets_to_copy'] = ['BLKDATA', 'SCPTDATA', 'COMPDATA', 'LINEARDATA', 'EVENTDATA', 'SEVENTDATA', 'POINTDATA', 'PCOMPDATA']
 #
 # Print sde_dictionary
 print('\n\nsde_dictionary:\n{0}'.format(json.dumps(sde_dictionary,
                                                    sort_keys=False,
                                                    indent=4)))
-
-
 # Define data dictionary for holding feature class and related table parameters
 data_dictionary = collections.OrderedDict()
 data_dictionary['BLKDATA'] = {}
@@ -288,7 +286,6 @@ if copy_datasets:
     print('\n\nCopying datasets...')
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
-    # for sde in ['CS_ORIGINAL']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -296,7 +293,7 @@ if copy_datasets:
         arcpy.env.workspace = temp_fgdb
         print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['copy_datasets']:
+        for dataset in sde_dictionary[sde]['datasets_to_copy']:
             print('\t\t{0}'.format(dataset))
             # Define in dataset
             if sde_dictionary[sde]['FeatureDataset'] == None:
@@ -601,7 +598,6 @@ if add_guids:
     print('\n\nAdding GUID fields to feature classes and related tables...')
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
-    # for sde in ['CS_ORIGINAL']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -609,7 +605,7 @@ if add_guids:
         arcpy.env.workspace = temp_fgdb
         print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['copy_datasets']:
+        for dataset in sde_dictionary[sde]['datasets_to_copy']:
             print('\t\t{0}'.format(dataset))
             # Define out dataset
             dataset_out = dataset + '_' + sde
@@ -675,13 +671,13 @@ if add_guids:
                                                                                          dataset_out))
         # Join GUIDs to related table
         print('\t\tJoining GUID fields to related tables...')
-        related_tables = sde_dictionary[sde]['copy_datasets']
-        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
+        related_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
+        # print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
         parent_tables = ['BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA']
         for parent_table in parent_tables:
             if parent_table in related_tables:
                 related_tables.remove(parent_table)
-        print('\t\trelated_tables:\t\t{0}'.format(related_tables))
+        print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
         for related_table in related_tables:
             print('\t\t\trelated_table:\t\t{0}'.format(related_table))
             in_data = related_table + '_' + sde
@@ -694,7 +690,7 @@ if add_guids:
             join_field = data_dictionary[parent_table]['id_field']
             print('\t\t\t\tjoin_field:\t\t{0}'.format(join_field))
             fields = [data_dictionary[parent_table]['guid_field']]
-            print('\t\t\t\tfields:\t\t{0}'.format(fields))
+            print('\t\t\t\tfields:\t\t\t{0}'.format(fields))
             arcpy.JoinField_management(in_data=in_data,
                                        in_field=in_field,
                                        join_table=join_table,
@@ -705,27 +701,27 @@ if add_guids:
             # Add attribute index to newly joined GUID field
             for field in fields:
                 print('\t\t\t\tAdding attribute index to field {0} in {1} {2}...'.format(field,
-                                                                                       data_dictionary[related_table]['type'].lower(),
-                                                                                       in_data))
+                                                                                         data_dictionary[related_table]['type'].lower(),
+                                                                                         in_data))
                 index_name = field + '_IDX'
                 if len(arcpy.ListIndexes(dataset=in_data,
                                          wild_card=index_name)) > 0:
                     print('\t\t\t\t\tDeleting attribute index {0} in {1} {2}...'.format(index_name,
-                                                                                      data_dictionary[related_table]['type'].lower(),
-                                                                                      in_data))
+                                                                                        data_dictionary[related_table]['type'].lower(),
+                                                                                        in_data))
                     arcpy.RemoveIndex_management(in_table=in_data,
                                                  index_name=index_name)
                     print('\t\t\t\t\tDeleted attribute index {0} in {1} {2}.'.format(index_name,
-                                                                                   data_dictionary[related_table]['type'].lower(),
-                                                                                   in_data))
+                                                                                     data_dictionary[related_table]['type'].lower(),
+                                                                                     in_data))
                 arcpy.AddIndex_management(in_table=in_data,
                                           fields=field,
                                           index_name=index_name,
                                           unique='UNIQUE',
                                           ascending='NON_ASCENDING')
                 print('\t\t\t\tAdded attribute index to field {0} in {1} {2}.'.format(field,
-                                                                                    data_dictionary[related_table]['type'].lower(),
-                                                                                    in_data))
+                                                                                      data_dictionary[related_table]['type'].lower(),
+                                                                                      in_data))
         # del index_name, guid_field, id_field, related_table_out, related_table, dataset_out, dataset, datasets
         print('\t\tJoined GUID fields to related tables.')
     print('Added GUID fields to feature classes and related tables.')
@@ -742,7 +738,6 @@ if check_guids:
     print('\tsample_size:\t\t{0}'.format(sample_size))
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
-    # for sde in ['CS_ORIGINAL']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -751,14 +746,13 @@ if check_guids:
         print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
         print(sde_dictionary[sde])
-        parent_tables = sde_dictionary[sde]['copy_datasets']
-        print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
+        parent_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
+        # print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
         child_tables = ['BLKDATA', 'COMPDATA', 'SEVENTDATA', 'PCOMPDATA']
         for child_table in child_tables:
             if child_table in parent_tables:
                 parent_tables.remove(child_table)
         print('\t\tparent_tables:\t\t{0}'.format(parent_tables))
-
         for parent_table in parent_tables:
             print('\t\t{0}'.format(parent_table))
             # Define out dataset
@@ -840,11 +834,6 @@ if check_guids:
                 if count != row_count:
                     sys.exit('\n\ncount != row_count!!!\n\n')
     print('Checked GUID fields in related datasets.')
-
-
-
-
-
 
 
 # Capture end_time
