@@ -291,8 +291,7 @@ copy_datasets = True
 if copy_datasets:
     print('\n\nCopying datasets...')
     # Loop through SDE geodatabases
-    # for sde in sde_dictionary.keys():
-    for sde in ['WGEM']:
+    for sde in sde_dictionary.keys():
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
@@ -640,6 +639,27 @@ if copy_datasets:
                                                                            data_dictionary[dataset]['type'].lower(),
                                                                            dataset_out))
 
+            # Copy GUID from parent table to child table based upon CS2007 id field
+            if data_dictionary[dataset]['parent_table'] != None:
+                print('\t\t\tJoining GUID fields to related tables...')
+                in_data = dataset_out
+                print('\t\t\t\tin_data:\t\t{0}'.format(in_data))
+                parent_table = data_dictionary[dataset]['parent_table']
+                in_field = data_dictionary[parent_table]['id_field']
+                print('\t\t\t\tin_field:\t\t{0}'.format(in_field))
+                join_table = parent_table + '_' + sde
+                print('\t\t\t\tjoin_table:\t\t{0}'.format(join_table))
+                join_field = data_dictionary[parent_table]['id_field']
+                print('\t\t\t\tjoin_field:\t\t{0}'.format(join_field))
+                fields = [data_dictionary[parent_table]['guid_field']]
+                print('\t\t\t\tfields:\t\t\t{0}'.format(fields))
+                arcpy.JoinField_management(in_data=in_data,
+                                           in_field=in_field,
+                                           join_table=join_table,
+                                           join_field=join_field,
+                                           fields=fields)
+                print('\t\t\tAdded GUID field to related tables.')
+
             # Copy in_memory dataset to file geodatabase
             print('\t\t\tCopying in_memory dataset to file geodatabase...')
             out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
@@ -661,29 +681,34 @@ if copy_datasets:
             # # Delete in_memory dataset
             # arcpy.Delete_management(dataset_out)
 
-            # Add attribute index to newly added GUID field
-            print('\t\t\tAdding attribute index to GUID field {0} in out {1} {2}...'.format(guid_field,
-                                                                                            data_dictionary[dataset]['type'].lower(),
-                                                                                            out_data))
-            index_name = guid_field + '_IDX'
-            if len(arcpy.ListIndexes(dataset=out_data,
-                                     wild_card=index_name)) > 0:
-                print('\t\t\t\tDeleting attribute index {0} in out {1} {2}...'.format(index_name,
-                                                                                      data_dictionary[dataset]['type'].lower(),
-                                                                                      out_data))
-                arcpy.RemoveIndex_management(in_table=out_data,
-                                             index_name=index_name)
-                print('\t\t\t\tDeleted attribute index {0} in out {1} {2}.'.format(index_name,
-                                                                                   data_dictionary[dataset]['type'].lower(),
-                                                                                   out_data))
-            arcpy.AddIndex_management(in_table=out_data,
-                                      fields=guid_field,
-                                      index_name=index_name,
-                                      unique='UNIQUE',
-                                      ascending='NON_ASCENDING')
-            print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field,
-                                                                                         data_dictionary[dataset]['type'].lower(),
-                                                                                         out_data))
+            # Cannot create attribute indexes on in_memory feature classes or tables
+            # so add attribute index to GUID fields in the copied file geodatabase feature class or table
+            guid_fields = arcpy.ListFields(dataset=out_data,
+                                           wild_card='',
+                                           field_type='GUID')
+            for guid_field in guid_fields:
+                print('\t\t\tAdding attribute index to GUID field {0} in out {1} {2}...'.format(guid_field.name,
+                                                                                                data_dictionary[dataset]['type'].lower(),
+                                                                                                out_data))
+                index_name = guid_field.name + '_IDX'
+                if len(arcpy.ListIndexes(dataset=out_data,
+                                         wild_card=index_name)) > 0:
+                    print('\t\t\t\tDeleting attribute index {0} in out {1} {2}...'.format(index_name,
+                                                                                          data_dictionary[dataset]['type'].lower(),
+                                                                                          out_data))
+                    arcpy.RemoveIndex_management(in_table=out_data,
+                                                 index_name=index_name)
+                    print('\t\t\t\tDeleted attribute index {0} in out {1} {2}.'.format(index_name,
+                                                                                       data_dictionary[dataset]['type'].lower(),
+                                                                                       out_data))
+                arcpy.AddIndex_management(in_table=out_data,
+                                          fields=guid_field.name,
+                                          index_name=index_name,
+                                          unique='UNIQUE',
+                                          ascending='NON_ASCENDING')
+                print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field.name,
+                                                                                             data_dictionary[dataset]['type'].lower(),
+                                                                                             out_data))
         # # List feature classes and tables currently in the in_memory workspace
         # # before deleting all datasets in the in_memory workspace
         # for loop in range(0, 2):
@@ -699,95 +724,6 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-# Capture end_time
-end_time = time.time()
-# Report elapsed_time (= end_time - start_time)
-print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
-# Print script filename, finish date and time
-print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
-                                                 datetime.datetime.now().strftime('%H:%M:%S'),
-                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
-sys.exit()
-
-
-add_guids = True
-
-
-if add_guids:
-    print('\n\nAdding GUID fields to feature classes and related tables...')
-    # Loop through SDE geodatabases
-    for sde in sde_dictionary.keys():
-        print('\t{0}'.format(sde))
-        temp_fgdb = os.path.join(os.path.dirname(fgdb),
-                                 os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
-        # Set arcpy.env.workspace to temporary SDE file geodatabase
-        arcpy.env.workspace = temp_fgdb
-        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
-        # Loop through feature classes and related tables
-        for dataset in sde_dictionary[sde]['datasets_to_copy']:
-            print('\t\t{0}'.format(dataset))
-            # Define out dataset
-            dataset_out = dataset + '_' + sde
-            print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
-            # Define GUID field
-        # Join GUIDs to related table
-        print('\t\tJoining GUID fields to related tables...')
-        related_tables = sde_dictionary[sde]['datasets_to_copy'].copy()
-        # print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
-        parent_tables = ['BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA']
-        for parent_table in parent_tables:
-            if parent_table in related_tables:
-                related_tables.remove(parent_table)
-        print('\t\t\trelated_tables:\t\t{0}'.format(related_tables))
-        for related_table in related_tables:
-            print('\t\t\trelated_table:\t\t{0}'.format(related_table))
-            in_data = related_table + '_' + sde
-            print('\t\t\t\tin_data:\t\t{0}'.format(in_data))
-            parent_table = data_dictionary[related_table]['parent_table']
-            in_field = data_dictionary[parent_table]['id_field']
-            print('\t\t\t\tin_field:\t\t{0}'.format(in_field))
-            join_table = parent_table + '_' + sde
-            print('\t\t\t\tjoin_table:\t\t{0}'.format(join_table))
-            join_field = data_dictionary[parent_table]['id_field']
-            print('\t\t\t\tjoin_field:\t\t{0}'.format(join_field))
-            fields = [data_dictionary[parent_table]['guid_field']]
-            print('\t\t\t\tfields:\t\t\t{0}'.format(fields))
-            arcpy.JoinField_management(in_data=in_data,
-                                       in_field=in_field,
-                                       join_table=join_table,
-                                       join_field=join_field,
-                                       fields=fields)
-            print('\t\t\tAdded GUID field to related tables.')
-            #
-            # Add attribute index to newly joined GUID field
-            for field in fields:
-                print('\t\t\t\tAdding attribute index to field {0} in {1} {2}...'.format(field,
-                                                                                         data_dictionary[related_table]['type'].lower(),
-                                                                                         in_data))
-                index_name = field + '_IDX'
-                if len(arcpy.ListIndexes(dataset=in_data,
-                                         wild_card=index_name)) > 0:
-                    print('\t\t\t\t\tDeleting attribute index {0} in {1} {2}...'.format(index_name,
-                                                                                        data_dictionary[related_table]['type'].lower(),
-                                                                                        in_data))
-                    arcpy.RemoveIndex_management(in_table=in_data,
-                                                 index_name=index_name)
-                    print('\t\t\t\t\tDeleted attribute index {0} in {1} {2}.'.format(index_name,
-                                                                                     data_dictionary[related_table]['type'].lower(),
-                                                                                     in_data))
-                arcpy.AddIndex_management(in_table=in_data,
-                                          fields=field,
-                                          index_name=index_name,
-                                          unique='UNIQUE',
-                                          ascending='NON_ASCENDING')
-                print('\t\t\t\tAdded attribute index to field {0} in {1} {2}.'.format(field,
-                                                                                      data_dictionary[related_table]['type'].lower(),
-                                                                                      in_data))
-        # del index_name, guid_field, id_field, related_table_out, related_table, dataset_out, dataset, datasets
-        print('\t\tJoined GUID fields to related tables.')
-    print('Added GUID fields to feature classes and related tables.')
-
-
 check_guids = True
 
 
@@ -795,7 +731,7 @@ if check_guids:
     # Checking GUID fields in related file geodatabase datasets
     print('\n\nChecking GUID fields in related datasets...')
     # Set sample size
-    sample_size = 10
+    sample_size = 50
     print('\tsample_size:\t\t{0}'.format(sample_size))
     # Loop through SDE geodatabases
     for sde in sde_dictionary.keys():
@@ -899,18 +835,12 @@ if check_guids:
 
 # Capture end_time
 end_time = time.time()
-
-
 # Report elapsed_time (= end_time - start_time)
 print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
-
-
 # Print script filename, finish date and time
 print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
                                                  datetime.datetime.now().strftime('%H:%M:%S'),
                                                  datetime.datetime.now().strftime('%Y-%m-%d')))
-
-
 sys.exit()
 
 
