@@ -279,19 +279,28 @@ for sde in sde_dictionary.keys():
 print('Created temporary SDE file geodatabases.')
 
 
+# Delete in_memory workspace contents
+print('\n\nDeleting contents of in_memory workspace...')
+arcpy.Delete_management(in_data='in_memory')
+print('Deleted contents of in_memory workspace.')
+
+
 copy_datasets = True
 
 
 if copy_datasets:
     print('\n\nCopying datasets...')
     # Loop through SDE geodatabases
-    for sde in sde_dictionary.keys():
+    # for sde in sde_dictionary.keys():
+    for sde in ['WGEM']:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(fgdb),
                                  os.path.splitext(os.path.basename(fgdb))[0] + '-' + str(sde).lower() + '.gdb')
         # # Set arcpy.env.workspace to temporary SDE file geodatabase
         # arcpy.env.workspace = temp_fgdb
-        # print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
+        # Set arcpy.env.workspace to the in_memory workspace
+        arcpy.env.workspace = 'in_memory'
+        print('\t\tarcpy.env.workspace:\t\t{0}'.format(arcpy.env.workspace))
         # Loop through feature classes and related tables
         for dataset in sde_dictionary[sde]['datasets_to_copy']:
             print('\t\t{0}'.format(dataset))
@@ -413,14 +422,20 @@ if copy_datasets:
                 count = int(result.getOutput(0))
                 print('\t\t\t\tCount:\t\t{0}'.format(count))
                 tableview = 'tableview'
-                parent_table = data_dictionary[dataset]['parent_table']
+                parent_table = arcpy.env.workspace + '\\' + data_dictionary[dataset]['parent_table'] + '_' + sde
                 print('\t\t\t\tparent_table:\t\t{0}'.format(parent_table))
-                id_field = data_dictionary[parent_table]['id_field']
-                where_clause = '{0} NOT IN (SELECT {1} FROM {2})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out,
-                                                                                                  field=id_field),
-                                                                         arcpy.AddFieldDelimiters(datasource=parent_table + '_' + sde,
-                                                                                                  field=id_field),
-                                                                         parent_table + '_' + sde)
+                id_field = data_dictionary[data_dictionary[dataset]['parent_table']]['id_field']
+                print('\t\t\t\tid_field:\t\t\t{0}'.format(id_field))
+                # Can't use subqueries (to select values in one table based upon values in another) with in_memory feature classes and tables
+                # So creating table view using a where clause based upon unique values in the parent table obtained using an arcpy.da.SearchCursor
+                values = [row[0]for row in arcpy.da.SearchCursor(in_table=parent_table,
+                                                                  field_names=id_field)]
+                unique_values = set(values)
+                print('\t\t\t\tunique_values:\t\t{0}'.format(unique_values))
+                print('\t\t\t\tnumber of unique_values:\t\t{0}'.format(len(unique_values)))
+                where_clause = '{0} NOT IN ({1})'.format(arcpy.AddFieldDelimiters(datasource=dataset_out,
+                                                                              field=id_field),
+                                                     ','.join(map(str, unique_values)))
                 print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
                 arcpy.MakeTableView_management(in_table=dataset_out,
                                                out_view=tableview,
@@ -629,6 +644,10 @@ if copy_datasets:
             print('\t\t\tCopying in_memory dataset to file geodatabase...')
             out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
             print('\t\t\t\tout_data:\t\t{0}'.format(out_data))
+            if arcpy.Exists(dataset=out_data):
+                print('\t\t\t\t\tDeleting out_data {0}...'.format(out_data))
+                arcpy.Delete_management(in_data=out_data)
+                print('\t\t\t\t\tDeleted out_data {0}.'.format(out_data))
             if data_dictionary[dataset]['type'] == 'Feature Class':
                 arcpy.CopyFeatures_management(in_features=dataset_out,
                                               out_feature_class=out_data)
@@ -665,7 +684,18 @@ if copy_datasets:
             print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field,
                                                                                          data_dictionary[dataset]['type'].lower(),
                                                                                          out_data))
-
+        # # List feature classes and tables currently in the in_memory workspace
+        # # before deleting all datasets in the in_memory workspace
+        # for loop in range(0, 2):
+        #     print(arcpy.env.workspace)
+        #     featureclasses = arcpy.ListFeatureClasses()
+        #     for featureclass in featureclasses:
+        #         print('\t{0}'.format(featureclass))
+        #     tables = arcpy.ListTables()
+        #     for table in tables:
+        #         print('\t{0}'.format(table))
+        #     if loop == 0:
+        #         arcpy.Delete_management(in_data='in_memory')
     print('Copied datasets.')
 
 
