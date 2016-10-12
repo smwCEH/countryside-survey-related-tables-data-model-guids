@@ -912,7 +912,7 @@ if append_datasets:
     print('Appended datasets into single file geodatabase.')
 
 
-create_relationship_classes = True
+create_relationship_classes = False
 
 
 if create_relationship_classes:
@@ -986,17 +986,6 @@ if create_relationship_classes:
     print('Created relationship classes.')
 
 
-# Capture end_time
-end_time = time.time()
-# Report elapsed_time (= end_time - start_time)
-print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
-# Print script filename, finish date and time
-print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
-                                                 datetime.datetime.now().strftime('%H:%M:%S'),
-                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
-sys.exit()
-
-
 copy_domains = True
 
 
@@ -1013,30 +1002,38 @@ if copy_domains:
     print('\tcode_field:\t\t\t\t{0}'.format(code_field))
     description_field = 'Description'
     print('\tdescription_field:\t\t{0}'.format(description_field))
-    # # Define in file geodatabase from which to copy domains
-    # # This file geodatabase was created from an XML Workspace document created from the CS ArcSDE geodatabase
-    fgdb_in = r'E:\CountrysideSurvey\esri-uk\domains\domains.gdb'
-    print('\tfgdb_in:\t\t{0}'.format(fgdb_in))
+    # Display combined file geodatabase
+    print('\t#\n\tcombined_fgdb:\t\t{0}'.format(combined_fgdb))
+    # Define ArcSDE geodatabase from which to copy domains
+    domain_fgdb = sde_dictionary['WGEM']['connection_file']
+    print('\tdomain_fgdb:\t\t{0}'.format(domain_fgdb))
     # Define temporary file geodatabase
-    fgdb_temp = os.path.dirname(fgdb_in)
-    fgdb_temp = os.path.join(fgdb_temp, r'temporary_domain_tables' + r'.gdb')
-    print('\t\tfgdb_temp:\t\t{0}'.format(fgdb_temp))
+    # fgdb_temp = os.path.dirname(combined_fgdb)
+    # fgdb_temp = os.path.join(fgdb_temp, r'temporary_domain_tables' + r'.gdb')
+    fgdb_temp = 'in_memory'
+    print('\tfgdb_temp:\t\t\t{0}'.format(fgdb_temp))
     # Create temporary file geodatabase
-    if arcpy.Exists(fgdb_temp):
-        print('\t\tDeleting fgdb_temp {0}...'.format(fgdb_temp))
-        arcpy.Delete_management(fgdb_temp)
-        print('\t\tDeleted fgdb_temp {0}.'.format(fgdb_temp))
-    print('\tCreating fgdb_temp {0}...'.format(fgdb_temp))
-    arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb_temp),
-                                   out_name=os.path.basename(fgdb_temp),
-                                   out_version='CURRENT')
-    print('\t\tCreated fgdb_temp {0}.'.format(fgdb_temp))
-    # Get a list of domains from the in file geodatabase
-    domains = arcpy.da.ListDomains(fgdb_in)
+    if fgdb_temp == 'in_memory':
+        print('\tUsing in_memory workspace to store domain tables.')
+    else:
+        print('\tUsing file geodatabase to store domain_tables.')
+        if arcpy.Exists(fgdb_temp):
+            print('\t\tDeleting fgdb_temp {0}...'.format(fgdb_temp))
+            arcpy.Delete_management(fgdb_temp)
+            print('\t\tDeleted fgdb_temp {0}.'.format(fgdb_temp))
+        print('\tCreating fgdb_temp {0}...'.format(fgdb_temp))
+        arcpy.CreateFileGDB_management(out_folder_path=os.path.dirname(fgdb_temp),
+                                       out_name=os.path.basename(fgdb_temp),
+                                       out_version='CURRENT')
+        print('\tCreated fgdb_temp {0}.'.format(fgdb_temp))
+    # Get a list of domains from the in ArcSDE geodatabase
+    domains = arcpy.da.ListDomains(domain_fgdb)
+    # Define domain prefix
+    domain_prefix = 'GMEP2013_'
     # Loop through list of domains in the in file geodatabase
     for domain in domains:
         # Only get CS 2007 domains
-        if domain.name.startswith('CS2007_'):
+        if domain.name.startswith(domain_prefix):
             # Print out domain name and type
             print('\t#\n\tDomain {0} is of type {1}'.format(domain.name,
                                                             domain.domainType))
@@ -1053,248 +1050,76 @@ if copy_domains:
             table_out = domain.name + '_table'
             table_out = os.path.join(fgdb_temp, table_out)
             print('\t\ttable_out:\t\t\t\t{0}'.format(table_out))
-            arcpy.DomainToTable_management(in_workspace=fgdb_in,
+            arcpy.DomainToTable_management(in_workspace=domain_fgdb,
                                            domain_name=domain.name,
                                            out_table=table_out,
                                            code_field=code_field,
                                            description_field=description_field,
                                            configuration_keyword='')
             print('\tConverted domain to table in temporary file geodatabase.')
-            # Add additional HABT_CODES to the CS2007_HABT_CODE table
-            if domain.name == 'CS2007_HABT_CODE':
-                print('\t#\n\tAdding additional domain values to {0} table...'.format(table_out))
-                habt_code_table = arcsde_cs_restored + '\\' +\
-                                  arcsde_user_cs_restored + '.' + 'HABITATS'
-                print('\t\thabt_code_table:\t\t{0}'.format(habt_code_table))
-                a = list(range(10070, 10077))
-                b = list(range(601, 613))
-                missing_values = a + b
-                for missing_value in missing_values:
-                    if missing_values.index(missing_value) == 0:
-                        missing_values_string = '(\'' + str(missing_value) + '\''
-                    elif missing_values.index(missing_value) == (len(missing_values) - 1):
-                        missing_values_string += ', \'' + str(missing_value) + '\')'
-                    else:
-                        missing_values_string += ', \'' + str(missing_value) + '\''
-                print('\t\tmissing_values_string:\t\t{0}'.format(missing_values_string))
-                where_clause = '{0} IN {1}'.format(arcpy.AddFieldDelimiters(habt_code_table, 'HABT_CODE'),
-                                                   missing_values_string)
-                print('\t\twhere_clause:\t\t{0}'.format(where_clause))
-                search_cursor_fields = ['HABT_CODE', 'HABITAT_NAME']
-                print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
-                print('\t\tMissing codes and descriptions:')
-                with arcpy.da.SearchCursor(in_table=habt_code_table,
-                                           field_names=search_cursor_fields,
-                                           where_clause=where_clause) as search_cursor:
-                    insert_cursor_fields = ['Code', 'Description']
-                    print('\t\tinsert_cursor_fields:\t\t{0}'.format(insert_cursor_fields))
-                    insert_cursor = arcpy.da.InsertCursor(in_table=table_out,
-                                                          field_names=insert_cursor_fields)
-                    for search_row in search_cursor:
-                        print('\t\t\t{0}:\t\t{1}'.format(search_row[0], search_row[1]))
-                        insert_cursor.insertRow((search_row[0], search_row[1]))
-                del insert_cursor, insert_cursor_fields
-                del search_row, search_cursor, search_cursor_fields
-                print('\tAdded additional domain values to {0} table.'.format(table_out))
-            # Add additional SPECIES to the CS2007_SPECIES table
-            if domain.name == 'CS2007_SPECIES':
-                print('\t#\n\tAdding additional domain values to {0} table...'.format(table_out))
-                fecodes_table = arcsde_cs_restored + '\\' + \
-                                arcsde_user_cs_restored + '.' + 'FECODES'
-                print('\t\tfecodes_table:\t\t{0}'.format(fecodes_table))
-                where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
-                                                  '\'SPECIES\'')
-                print('\t\twhere_clause:\t\t{0}'.format(where_clause))
-                search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
-                print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
-                species_count = 0
-                print('\t\tMissing codes and descriptions:')
-                with arcpy.da.SearchCursor(in_table=fecodes_table,
-                                           field_names=search_cursor_fields,
-                                           where_clause=where_clause) as search_cursor:
-                    insert_cursor_fields = ['Code', 'Description']
-                    print('\t\tinsert_cursor_fields:\t\t{0}'.format(insert_cursor_fields))
-                    insert_cursor = arcpy.da.InsertCursor(in_table=table_out,
-                                                          field_names=insert_cursor_fields)
-                    for search_row in search_cursor:
-                        print('\t\t\t{0}:\t\t{1}'.format(search_row[1], search_row[2]))
-                        insert_cursor.insertRow((search_row[1], search_row[2]))
-                del insert_cursor, insert_cursor_fields
-                del search_row, search_cursor, search_cursor_fields
-                print('\tAdded additional domain values to {0} table.'.format(table_out))
-
             # Delete identical records in the temporary domain fgdb table
             print('\tDeleting any identical records in the {0} table...'.format(table_out))
             arcpy.DeleteIdentical_management(in_dataset=table_out,
                                              fields=['Code', 'Description'])
             print('\tDeleted any identical records in the {0} table.'.format(table_out))
             # Convert table to domain in the out file geodatabase
-            field_name = domain.name.replace('CS2007_', '')
-            print('\t\tfield_name:\t\t{0}'.format(field_name))
+            field_name = domain.name.replace(domain_prefix, '')
+            print('\tfield_name:\t\t{0}'.format(field_name))
             print('\tConverting table to domain in the out file geodatabase...')
-            existing_domains_list = arcpy.Describe(fgdb).domains
+            existing_domains_list = arcpy.Describe(combined_fgdb).domains
             print('\t\texisiting_domains_list:\t\t{0}'.format(existing_domains_list))
             if domain.name in existing_domains_list:
                 print('\t\t\tDeleting existing domain {0} in file geodatabase...'.format(domain.name))
                 tables = ['SCPTDATA', 'LINEARDATA', 'POINTDATA', 'COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
                 for table in tables:
                     print('\t\t\ttable:\t\t{0}'.format(table))
-                    fields = arcpy.ListFields(os.path.join(fgdb, table))
+                    fields = arcpy.ListFields(os.path.join(combined_fgdb, table))
                     for field in fields:
                         delete = 'Delete domain' if field_name == field.name else 'Do not delete domain'
                         if delete == 'Delete domain':
                             print('\t\t\t\tRemoving domain {0} from field {1}...'.format(domain.name,
                                                                                          field.name))
-                            arcpy.RemoveDomainFromField_management(in_table=os.path.join(fgdb, table),
+                            arcpy.RemoveDomainFromField_management(in_table=os.path.join(combined_fgdb, table),
                                                                    field_name=field_name,
                                                                    subtype_code='')
                             print('\t\t\t\tRemoved domain {0} from field {1}.'.format(domain.name,
                                                                                      field.name))
                 del tables
-                arcpy.DeleteDomain_management(in_workspace=fgdb,
+                arcpy.DeleteDomain_management(in_workspace=combined_fgdb,
                                               domain_name=domain.name)
                 print('\t\t\tDeleted existing domain {0} in file geodatabase.'.format(domain.name))
+            domain_description = domain.name.replace(domain_prefix, '')
             domain_description = domain.name.replace('_', ' ') + ' domain'
             print('\t\tdomain_description:\t\t{0}'.format(domain_description))
             arcpy.TableToDomain_management(in_table=table_out,
                                            code_field=code_field,
                                            description_field=description_field,
-                                           in_workspace=fgdb,
-                                           domain_name=domain.name,
+                                           in_workspace=combined_fgdb,
+                                           domain_name=domain.name.replace(domain_prefix, ''),
                                            domain_description=domain_description,
                                            update_option='REPLACE')
             print('\tConverted table to domain in the out file geodatabase.')
             # Assign domain to field
             print('\tAssigning domain to a field ...')
-#            field_name = domain.name.replace('CS2007_', '')
-#            print('\t\tfield_name:\t\t{0}'.format(field_name))
-            arcpy.env.workspace = fgdb
+            field_name = domain.name.replace(domain_prefix, '')
+            print('\t\tfield_name:\t\t{0}'.format(field_name))
+            arcpy.env.workspace = combined_fgdb
             # tables = arcpy.ListTables()
             tables = ['SCPTDATA', 'LINEARDATA', 'POINTDATA', 'COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
             for table in tables:
                 print('\t\t\ttable:\t\t{0}'.format(table))
-                fields = arcpy.ListFields(os.path.join(fgdb, table))
+                fields = arcpy.ListFields(os.path.join(combined_fgdb, table))
                 for field in fields:
                     assign = 'Assign domain' if field_name == field.name else 'Do not assign domain'
                     if assign == 'Assign domain':
                         print('\t\t\t\t{0} is a type of {1}\t\t{2}'.format(field.name,
                                                                             field.type,
                                                                             assign))
-                        arcpy.AssignDomainToField_management(in_table=os.path.join(fgdb, table),
+                        arcpy.AssignDomainToField_management(in_table=os.path.join(combined_fgdb, table),
                                                              field_name=field_name,
-                                                             domain_name=domain.name,
+                                                             domain_name=domain.name.replace(domain_prefix, ''),
                                                              subtype_code='')
             print('\tAssigned domain to a field.')
-    #
-    # Add domains from WGEM project
-    print('\n\nAdding domains from the WGEM project...')
-    fecodes_table = r'C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB TBB WGEMADMIN.sde\WGEMADMIN.FECODES'
-    search_cursor_fields = ['COLUMN_NAME', 'CODE', 'DESCRIPTION']
-    for column_name in ['LUSE', 'CONDITION', 'DISEASE_SIGNS', 'HABITAT_BOXES']:
-        print('\t#\n\tcolumn_name:\t\t{0}'.format(column_name))
-        #
-        domain = 'GMEP13_' + column_name
-        print('\t\tdomain:\t\t{0}'.format(domain))
-        #
-        where_clause = u'{0} = \'{1}\''.format(arcpy.AddFieldDelimiters(fecodes_table, 'COLUMN_NAME'),
-                                           column_name)
-        print('\t\t\twhere_clause:\t\t{0}'.format(where_clause))
-        wgem_table = os.path.join(fgdb_temp, 'WGEM_' + column_name)
-        print('\t\t\twgem_table:\t\t{0}'.format(wgem_table))
-        if arcpy.Exists(wgem_table):
-            print('\t\t\t\t\tDeleting wgem_table {0}...'.format(wgem_table))
-            arcpy.Delete_management(wgem_table)
-            print('\t\t\t\t\tDeleted wgem_table {0}.'.format(wgem_table))
-        print('\t\t\t\tCreating wgem_table {0}...'.format(wgem_table))
-        arcpy.CreateTable_management(out_path=os.path.dirname(wgem_table),
-                                     out_name=os.path.basename(wgem_table))
-        print('\t\t\t\t\tAdding fields to wgem_table {0}...'.format(wgem_table))
-        arcpy.AddField_management(in_table=wgem_table,
-                                  field_name=code_field,
-                                  field_type='TEXT',
-                                  field_length=10)
-        arcpy.AddField_management(in_table=wgem_table,
-                                  field_name=description_field,
-                                  field_type='TEXT',
-                                  field_length=40)
-        print('\t\t\t\t\tAdded fields to wgem_table {0}.'.format(wgem_table))
-        print('\t\t\t\tCreated wgem_table {0}.'.format(wgem_table))
-        print('\t\t\tUsing arcpy.da cursors to find values and add to wgem_table...')
-        print('\t\t\t{0:<20}\t{1:<20}\t{2:<20}'.format(search_cursor_fields[0],
-                                                   search_cursor_fields[1],
-                                                   search_cursor_fields[2]))
-        insert_cursor_fields = ['CODE', 'DESCRIPTION']
-        insert_cursor = arcpy.da.InsertCursor(in_table=wgem_table,
-                                              field_names=insert_cursor_fields)
-        with arcpy.da.SearchCursor(in_table=fecodes_table,
-                                   field_names=search_cursor_fields,
-                                   where_clause=where_clause) as search_cursor:
-            for search_row in search_cursor:
-                print('\t\t\t{0:<20}\t{1:<20}\t{2:<20}'.format(search_row[0],
-                                                           search_row[1],
-                                                           search_row[2]))
-                insert_cursor.insertRow((search_row[1],
-                                         search_row[2]))
-        del insert_cursor
-        del search_row, search_cursor
-        print('\t\t\tUsed arcpy.da cursors to find values and add to wgem_table.')
-        #
-        print('\t\t\tConverting table to domain in the out file geodatabase...')
-        existing_domains_list = arcpy.Describe(combined_fgdb).domains
-        print('\t\t\t\texisiting_domains_list:\t\t{0}'.format(existing_domains_list))
-        if domain in existing_domains_list:
-            print('\t\t\t\t\tDeleting existing domain {0} in file geodatabase...'.format(domain))
-            tables = ['SCPTDATA', 'LINEARDATA', 'POINTDATA', 'COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
-            for table in tables:
-                print('\t\t\t\t\t\ttable:\t\t{0}'.format(table))
-                fields = arcpy.ListFields(os.path.join(combined_fgdb, table))
-                for field in fields:
-                    delete = 'Delete domain' if column_name == field.name else 'Do not delete domain'
-                    if delete == 'Delete domain':
-                        print('\t\t\t\t\t\t\tRemoving domain {0} from field {1}...'.format(domain,
-                                                                                     column_name))
-                        arcpy.RemoveDomainFromField_management(in_table=os.path.join(combined_fgdb, table),
-                                                               field_name=column_name,
-                                                               subtype_code='')
-                        print('\t\t\t\t\t\t\tRemoved domain {0} from field {1}.'.format(domain,
-                                                                                 column_name))
-            del tables
-            arcpy.DeleteDomain_management(in_workspace=combined_fgdb,
-                                          domain_name=domain)
-            print('\t\t\t\t\tDeleted existing domain {0} in file geodatabase.'.format(domain))
-        domain_description = domain.replace('_', ' ') + ' domain'
-        print('\t\t\t\tdomain_description:\t\t{0}'.format(domain_description))
-        arcpy.TableToDomain_management(in_table=wgem_table,
-                                       code_field=code_field,
-                                       description_field=description_field,
-                                       in_workspace=combined_fgdb,
-                                       domain_name=domain,
-                                       domain_description=domain_description,
-                                       update_option='REPLACE')
-        print('\t\t\tConverted table to domain in the out file geodatabase.')
-        #
-        # Assign domain to field
-        print('\t\t\tAssigning domain to a field ...')
-        field_name = column_name
-        print('\t\t\t\tfield_name:\t\t{0}'.format(field_name))
-        arcpy.env.workspace = combined_fgdb
-        # tables = arcpy.ListTables()
-        tables = ['SCPTDATA', 'LINEARDATA', 'POINTDATA', 'COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA']
-        for table in tables:
-            print('\t\t\t\t\ttable:\t\t{0}'.format(table))
-            fields = arcpy.ListFields(os.path.join(combined_fgdb, table))
-            for field in fields:
-                assign = 'Assign domain' if field_name == field.name else 'Do not assign domain'
-                if assign == 'Assign domain':
-                    print('\t\t\t\t\t\t{0} is a type of {1}\t\t{2}'.format(field.name,
-                                                                        field.type,
-                                                                        assign))
-                    arcpy.AssignDomainToField_management(in_table=os.path.join(combined_fgdb, table),
-                                                         field_name=field_name,
-                                                         domain_name=domain,
-                                                         subtype_code='')
-        print('\t\t\tAssigned domain to a field.')
-    print('Added domains from the WGEM project.')
     #
     print('\n\nCopied domains and applied to fields.')
 
