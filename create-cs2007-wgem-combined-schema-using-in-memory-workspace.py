@@ -285,7 +285,7 @@ arcpy.Delete_management(in_data='in_memory')
 print('Deleted contents of in_memory workspace.')
 
 
-copy_datasets = True
+copy_datasets = False
 
 
 if copy_datasets:
@@ -724,7 +724,7 @@ if copy_datasets:
     print('Copied datasets.')
 
 
-check_guids = True
+check_guids = False
 
 
 if check_guids:
@@ -833,7 +833,7 @@ if check_guids:
     print('Checked GUID fields in related datasets.')
 
 
-append_datasets = True
+append_datasets = False
 
 
 if append_datasets:
@@ -912,48 +912,37 @@ if append_datasets:
     print('Appended datasets into single file geodatabase.')
 
 
-# Capture end_time
-end_time = time.time()
-# Report elapsed_time (= end_time - start_time)
-print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
-# Print script filename, finish date and time
-print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
-                                                 datetime.datetime.now().strftime('%H:%M:%S'),
-                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
-sys.exit()
-
-
 create_relationship_classes = True
 
 
 if create_relationship_classes:
     # Add relationship classes
     print('\n\nCreating relationship classes...')
-    for dataset in data_dictionary.keys():
+    for dataset in ['SCPTDATA', 'LINEARDATA', 'EVENTDATA', 'POINTDATA']:
         print('\tdataset:\t\t{0}'.format(dataset))
         # Define output dataset
         dataset_out = os.path.join(combined_fgdb, dataset)
         print('\t\tdataset_out:\t\t{0}'.format(dataset_out))
         # Get related table from data dictionary
-        related_table = data_dictionary[dataset]['related_table']
-        print('\t\trelated_table:\t\t{0}'.format(related_table))
+        child_table = data_dictionary[dataset]['child_table']
+        print('\t\tchild_table:\t\t{0}'.format(child_table))
         # Get related table from data dictionary
         guid_field = data_dictionary[dataset]['guid_field']
         print('\t\tguid_field:\t\t\t{0}'.format(guid_field))
         # Define output related table path
-        related_table_out = os.path.join(combined_fgdb, related_table)
-        print('\t\trelated_table_out:\t\t{0}'.format(related_table_out))
+        child_table_out = os.path.join(combined_fgdb, child_table)
+        print('\t\tchild_table_out:\t\t{0}'.format(child_table_out))
         #  Create relationship class
         print('\t\tCreating relationship class...')
         print('\t\t\torigin_table:\t\t\t\t{0}'.format(dataset_out))
-        print('\t\t\tdestination_table:\t\t\t{0}'.format(related_table_out))
-        out_relationship_class = os.path.basename(dataset_out) + '_' + os.path.basename(related_table_out)
+        print('\t\t\tdestination_table:\t\t\t{0}'.format(child_table_out))
+        out_relationship_class = os.path.basename(dataset_out) + '_' + os.path.basename(child_table_out)
         print('\t\t\tout_relationship_class:\t\t{0}'.format(out_relationship_class))
         relationship_type = 'COMPOSITE'
         print('\t\t\trelationship_type:\t\t\t{0}'.format(relationship_type))
         forward_label = os.path.basename(dataset_out)
         print('\t\t\tforward_label:\t\t\t\t{0}'.format(forward_label))
-        backward_label = os.path.basename(related_table_out)
+        backward_label = os.path.basename(child_table_out)
         print('\t\t\tbackward_label:\t\t\t\t{0}'.format(backward_label))
         message_direction = 'FORWARD'
         print('\t\t\tmessage_direction:\t\t\t{0}'.format(message_direction))
@@ -980,7 +969,7 @@ if create_relationship_classes:
             arcpy.Delete_management(in_data=os.path.join(combined_fgdb, out_relationship_class))
             print('\t\t\tDeleted existing relationship class {0}.'.format(out_relationship_class))
         arcpy.CreateRelationshipClass_management(origin_table=dataset_out,
-                                                 destination_table=related_table_out,
+                                                 destination_table=child_table_out,
                                                  out_relationship_class=out_relationship_class,
                                                  relationship_type=relationship_type,
                                                  forward_label=forward_label,
@@ -994,7 +983,18 @@ if create_relationship_classes:
                                                  destination_foreign_key=destination_foreign_key)
         print('\t\tCreated relationship class.')
     #
-    print('Creating relationship classes...')
+    print('Created relationship classes.')
+
+
+# Capture end_time
+end_time = time.time()
+# Report elapsed_time (= end_time - start_time)
+print('\n\nIt took {0} to execute this.'.format(hms_string(end_time - start_time)))
+# Print script filename, finish date and time
+print('\n\nFinished {0} at {1} on {2}.\n'.format(script,
+                                                 datetime.datetime.now().strftime('%H:%M:%S'),
+                                                 datetime.datetime.now().strftime('%Y-%m-%d')))
+sys.exit()
 
 
 copy_domains = True
