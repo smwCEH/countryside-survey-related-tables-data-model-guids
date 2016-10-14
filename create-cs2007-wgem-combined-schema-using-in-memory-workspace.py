@@ -176,12 +176,12 @@ field_alias_dictionary['BLKDATA']['BLK'] = 'CS Square'
 sm_table_item_table = sde_dictionary['CS_RESTORED']['connection_file'] + '\\' +\
                       sde_dictionary['CS_RESTORED']['user'] + '.' + 'SM_TABLE_ITEM'
 print('\t#\n\tsm_table_item_table:\t\t{0}'.format(sm_table_item_table))
+search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+print('\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
 for dataset in data_dictionary.keys():
     if dataset in ('SCPTDATA', 'POINTDATA', 'LINEARDATA'):      # Ignore EVENTDATA related table as will queried as the related table of the LINEARDATA feature class
         field_alias_dictionary[dataset] = {}
         print('\t#\n\tdataset:\t\t{0}'.format(dataset))
-        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
-        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
         where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
                                           '\'' + dataset + '\'')
         print('\t\twhere_clause:\t\t{0}'.format(where_clause))
@@ -189,16 +189,16 @@ for dataset in data_dictionary.keys():
                                    field_names=search_cursor_fields,
                                    where_clause=where_clause) as search_cursor:
             for search_row in search_cursor:
+                alias = search_row[1] if search_row[1] == 'ORIGINAL_ID' else search_row[2]
                 print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
                                                        search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[dataset][search_row[1]]= search_row[2]
-        del search_cursor, search_cursor_fields
+                                                       alias))
+                field_alias_dictionary[dataset][search_row[1]]= alias
+                del alias
+        del search_cursor
         related_table = data_dictionary[dataset]['child_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
         field_alias_dictionary[related_table] = {}
-        search_cursor_fields = ['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
-        print('\t\tsearch_cursor_fields:\t\t{0}'.format(search_cursor_fields))
         where_clause = '{0} = {1}'.format(arcpy.AddFieldDelimiters(sm_table_item_table, 'TABLENAME'),
                                           '\'' + related_table + '\'')
         print('\t\twhere_clause:\t\t{0}'.format(where_clause))
@@ -206,11 +206,13 @@ for dataset in data_dictionary.keys():
                                    field_names=search_cursor_fields,
                                    where_clause=where_clause) as search_cursor:
             for search_row in search_cursor:
+                alias = search_row[1] if search_row[1] == 'ORIGINAL_ID' else search_row[2]
                 print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
                                                        search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[related_table][search_row[1]] = search_row[2]
-        del search_cursor, search_cursor_fields
+                                                       alias))
+                field_alias_dictionary[related_table][search_row[1]] = alias
+                del alias
+        del search_cursor
     if dataset in ('EVENTDATA'):  # Get SEVENTDATA
         related_table = data_dictionary[dataset]['child_table']
         print('\t\trelated_table:\t\t{0}'.format(related_table))
@@ -224,11 +226,14 @@ for dataset in data_dictionary.keys():
                                    field_names=search_cursor_fields,
                                    where_clause=where_clause) as search_cursor:
             for search_row in search_cursor:
+                alias = search_row[1] if search_row[1] == 'ORIGINAL_ID' else search_row[2]
                 print('\t\t\t{0}\t\t{1}\t\t{2}'.format(search_row[0],
                                                        search_row[1],
-                                                       search_row[2]))
-                field_alias_dictionary[related_table][search_row[1]]= search_row[2]
-        del search_cursor, search_cursor_fields
+                                                       alias))
+                field_alias_dictionary[related_table][search_row[1]]= alias
+                del alias
+        del search_cursor
+del search_cursor_fields
 # Print out field_alias_dictionary
 print('\t#\n\t{0}'.format(field_alias_dictionary))
 # Print out lower level dictionaries for each dataset and related table
@@ -367,7 +372,6 @@ if copy_datasets:
                                              template=dataset_in)
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
-
             # Delete non-CS2007 fields
             print('\t\t\tDeleting non-CS2007 fields from out {0} {1}...'.format(data_dictionary[dataset]['type'].lower(),
                                                                                 dataset_out))
@@ -612,14 +616,22 @@ if copy_datasets:
                     field_alias = field_alias_dictionary.get(dataset, {}).get(field.name, DEFAULT)
                     if field_alias is not None:
                         print('\t\t\t\tfield_alias:\t\t{0}'.format(field_alias))
+                        # Can't seem to replace upper-case alias name with lower-case, so replace alias name with dummy alias before setting to lower-case alias!
+                        # print('in_table={0}\tfield={1}\tnew_field_alias={2}'.format(dataset_out, field.name, field_alias))
+                        if field.name.upper() in ['USE', 'SPECIES', 'PROPORTION', 'HEIGHT', 'CONDITION', 'WIDTH', 'TUSSOCKINESS']:
+                            # print('Setting cheesey alias...')
+                            arcpy.AlterField_management(in_table=dataset_out,
+                                                        field=field.name,
+                                                        new_field_alias='CHEESE')
+                            # print('Set cheesey alias.')
+                        # print('new_field_alias={0}'.format(field_alias))
                         arcpy.AlterField_management(in_table=dataset_out,
                                                     field=field.name,
                                                     new_field_alias=field_alias)
             print('\t\t\tAdded field aliases.')
-
+            # Add GUID field to output dataset if it doesn't already exist (Note: cannot delete required fields including GUIDs)
             guid_field = data_dictionary[dataset]['guid_field']
             print('\t\t\tguid_field:\t\t{0}'.format(guid_field))
-            # Add GUID field to output dataset if it doesn't already exist (Note: cannot delete required fields including GUIDs)
             if not arcpy.ListFields(dataset=dataset_out,
                                     wild_card=guid_field):
                 print('\t\t\tAdding GUID field {0} to out {1} {2}...'.format(guid_field,
@@ -652,8 +664,7 @@ if copy_datasets:
             print('\t\t\tCalculated GUID field {0} in out {1} {2}.'.format(guid_field,
                                                                            data_dictionary[dataset]['type'].lower(),
                                                                            dataset_out))
-
-            # Copy GUID from parent table to child table based upon CS2007 id field
+                        # # Copy GUID from parent table to child table based upon CS2007 id field
             if data_dictionary[dataset]['parent_table'] != None:
                 print('\t\t\tJoining GUID fields to related tables...')
                 in_data = dataset_out
@@ -673,7 +684,6 @@ if copy_datasets:
                                            join_field=join_field,
                                            fields=fields)
                 print('\t\t\tAdded GUID field to related tables.')
-
             # Copy in_memory dataset to file geodatabase
             print('\t\t\tCopying in_memory dataset to file geodatabase...')
             out_data = os.path.join(temp_fgdb, dataset + '_' + sde)
@@ -692,9 +702,6 @@ if copy_datasets:
             else:
                 sys.exit('\n\nNot coded for!!!Create table isn\'t FeatureClass or Table!!!\n')
             print('\t\t\tCopied in_memory dataset to file geodatabase.')
-            # # Delete in_memory dataset
-            # arcpy.Delete_management(dataset_out)
-
             # Cannot create attribute indexes on in_memory feature classes or tables
             # so add attribute index to GUID fields in the copied file geodatabase feature class or table
             guid_fields = arcpy.ListFields(dataset=out_data,
@@ -723,22 +730,19 @@ if copy_datasets:
                 print('\t\t\tAdded attribute index to GUID field {0} in out {1} {2}.'.format(guid_field.name,
                                                                                              data_dictionary[dataset]['type'].lower(),
                                                                                              out_data))
-        # # List feature classes and tables currently in the in_memory workspace
-        # # before deleting all datasets in the in_memory workspace
-        # for loop in range(0, 2):
-        #     print(arcpy.env.workspace)
-        #     featureclasses = arcpy.ListFeatureClasses()
-        #     for featureclass in featureclasses:
-        #         print('\t{0}'.format(featureclass))
-        #     tables = arcpy.ListTables()
-        #     for table in tables:
-        #         print('\t{0}'.format(table))
-        #     if loop == 0:
-        #         arcpy.Delete_management(in_data='in_memory')
     print('Copied datasets.')
 
 
 del copy_datasets
+
+
+# Delete in_memory workspace contents
+print('\n\nDeleting contents of in_memory workspace...')
+arcpy.Delete_management(in_data='in_memory')
+print('Deleted contents of in_memory workspace.')
+
+
+time.sleep(60)
 
 
 check_guids = True
