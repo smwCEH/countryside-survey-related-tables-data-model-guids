@@ -16,7 +16,7 @@ print('\n\n{}'.format(sys.version))
 
 print('Cheese')
 print('Sleeping...')
-time.sleep(5)
+time.sleep(10)
 print('Slept.')
 
 
