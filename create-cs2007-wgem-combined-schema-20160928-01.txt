@@ -1,0 +1,528 @@
+
+
+sys.version:					3.4.4 |Continuum Analytics, Inc.| (default, Feb 16 2016, 09:54:04) [MSC v.1600 64 bit (AMD64)]
+sys.versioninfo:				sys.version_info(major=3, minor=4, micro=4, releaselevel='final', serial=0)
+platform.architecture():		('64bit', 'WindowsPE')
+
+
+Started create-cs2007-wgem-combined-schema.py at 14:16:42 on 2016-09-28...
+
+
+sde_dictionary:
+{
+    "CS_ORIGINAL": {
+        "datasets_to_copy": [
+            "POINTDATA",
+            "PCOMPDATA"
+        ],
+        "user": "CSADMIN",
+        "connection_file": "C:\\Users\\SMW\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\Connection to LADB FEGEN CSADMIN.sde",
+        "FeatureDataset": null
+    },
+    "CS_RESTORED": {
+        "datasets_to_copy": [
+            "BLKDATA",
+            "SCPTDATA",
+            "COMPDATA",
+            "LINEARDATA",
+            "EVENTDATA",
+            "SEVENTDATA"
+        ],
+        "user": "CS2007_ADMIN",
+        "connection_file": "C:\\Users\\SMW\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\Connection to LADB FEGEN2 CS2007_ADMIN.sde",
+        "FeatureDataset": "ForesterData"
+    },
+    "WGEM": {
+        "datasets_to_copy": [
+            "BLKDATA",
+            "SCPTDATA",
+            "COMPDATA",
+            "LINEARDATA",
+            "EVENTDATA",
+            "SEVENTDATA",
+            "POINTDATA",
+            "PCOMPDATA"
+        ],
+        "user": "WGEMADMIN",
+        "connection_file": "C:\\Users\\SMW\\AppData\\Roaming\\ESRI\\Desktop10.1\\ArcCatalog\\Connection to LADB TBB WGEMADMIN.sde",
+        "FeatureDataset": "ForesterData"
+    }
+}
+
+
+data_dictionary:
+{
+    "BLKDATA": {
+        "guid_field": "BLKDATA_GUID",
+        "parent_table": null,
+        "id_field": "BLKDATA_ID",
+        "type": "Feature Class",
+        "child_table": null,
+        "drop_fields": [
+            "EXTENT",
+            "FOREST",
+            "CREATE_ID"
+        ]
+    },
+    "SCPTDATA": {
+        "child_table": "COMPDATA",
+        "parent_table": null,
+        "id_field": "SCPTDATA_ID",
+        "type": "Feature Class",
+        "guid_field": "SCPTDATA_GUID",
+        "drop_fields": [
+            "SCPT",
+            "FORP",
+            "COVA",
+            "COFC",
+            "HABT",
+            "AMAW",
+            "SOIL",
+            "TCON",
+            "TRGH",
+            "TSLP",
+            "CULT",
+            "GRAZED_SWARD",
+            "CANOPY_FRAGMENTATION",
+            "MAPCODE_AG",
+            "MAPCODE_FO",
+            "MAPCODE_PH",
+            "MAPCODE_ST",
+            "MAPCODE_HA",
+            "CPMT",
+            "BLK",
+            "FOREST",
+            "ALTD",
+            "THIN_STATUS",
+            "INVALID_THIN",
+            "CPTDATA_ID",
+            "THINCOUPE_ID",
+            "CREATE_ID",
+            "CANOPY_COVERP",
+            "NATIVE_SPIS_IN_CANOPYP",
+            "SEMI_NATURALP",
+            "PLANTEDP",
+            "POACHED_GROUND",
+            "SPATIAL_ERROR"
+        ]
+    },
+    "COMPDATA": {
+        "child_table": null,
+        "parent_table": "SCPTDATA",
+        "id_field": "COMPDATA_ID",
+        "type": "Table",
+        "guid_field": "COMPDATA_GUID",
+        "drop_fields": [
+            "SCPT",
+            "SPIS",
+            "ORIG",
+            "PROP",
+            "ROTN",
+            "MIXT",
+            "MODEL",
+            "STOP",
+            "FCST",
+            "EXTLUSE",
+            "HABT_CONDITION",
+            "LANDSCAPE_TYPE",
+            "STRUCTURE",
+            "BARK_STRIP_FRAYING",
+            "CPMT",
+            "PLYR",
+            "STOCK",
+            "SDATE",
+            "DISP",
+            "BLK",
+            "FOREST",
+            "STRY",
+            "YLDC",
+            "SPNUM",
+            "THCY",
+            "DFST",
+            "DNXT",
+            "VOLP",
+            "VOLT",
+            "DBHP",
+            "CREATE_ID",
+            "COMP_NUM",
+            "SPACING",
+            "WHCL",
+            "DBH_CLASS",
+            "FIRST_GRADEP",
+            "SECOND_GRADEP",
+            "THIRD_GRADEP",
+            "WOODLAND_LOSS_TYPE",
+            "WOODLAND_LOSS_CAUSE",
+            "BROWSING_RATE",
+            "BROWSELINE",
+            "BASAL_SHOOTS"
+        ]
+    },
+    "LINEARDATA": {
+        "child_table": "EVENTDATA",
+        "parent_table": null,
+        "id_field": "LINEARDATA_ID",
+        "type": "Feature Class",
+        "guid_field": "LINEARDATA_GUID",
+        "drop_fields": [
+            "BLKDATA_ID",
+            "CREATE_ID"
+        ]
+    },
+    "EVENTDATA": {
+        "child_table": "SEVENTDATA",
+        "parent_table": "LINEARDATA",
+        "id_field": "EVENTDATA_ID",
+        "type": "Table",
+        "guid_field": "EVENTDATA_GUID",
+        "drop_fields": [
+            "MAPCODE_BD",
+            "MAPCODE_FO",
+            "MAPCODE_PH",
+            "MAPCODE_ST",
+            "CREATE_ID"
+        ]
+    },
+    "SEVENTDATA": {
+        "child_table": null,
+        "parent_table": "EVENTDATA",
+        "id_field": "SEVENTDATA_ID",
+        "type": "Table",
+        "guid_field": "SEVENTDATA_GUID",
+        "drop_fields": [
+            "CREATE_ID"
+        ]
+    },
+    "POINTDATA": {
+        "child_table": "PCOMPDATA",
+        "parent_table": null,
+        "id_field": "POINTDATA_ID",
+        "type": "Feature Class",
+        "guid_field": "POINTDATA_GUID",
+        "drop_fields": [
+            "MAPCODE_AG",
+            "MAPCODE_FO",
+            "MAPCODE_PH",
+            "MAPCODE_ST",
+            "CREATE_ID",
+            "CPTDATA_ID"
+        ]
+    },
+    "PCOMPDATA": {
+        "child_table": null,
+        "parent_table": "POINTDATA",
+        "id_field": "PCOMPDATA_ID",
+        "type": "Table",
+        "guid_field": "PCOMPDATA_GUID",
+        "drop_fields": [
+            "CREATE_ID"
+        ]
+    }
+}
+
+
+Creating dictionary to hold field aliases...
+	#
+	sm_table_item_table:		C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.SM_TABLE_ITEM
+	#
+	dataset:		SCPTDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'SCPTDATA'
+			SCPTDATA		MAPCODE_AG		AG Mapcode
+			SCPTDATA		MAPCODE_FO		FO Mapcode
+			SCPTDATA		MAPCODE_PH		PH Mapcode
+			SCPTDATA		MAPCODE_ST		ST Mapcode
+			SCPTDATA		MAPCODE_HA		HA Mapcode
+			SCPTDATA		BROAD_HABITAT		Broad Habitat
+			SCPTDATA		BH98_ACCURACY		BH Accuracy(98)
+			SCPTDATA		VISIT_STATUS		Visit Status
+			SCPTDATA		REASON_FOR_CHANGE		Reason for Change
+			SCPTDATA		ORIGINAL_ID		FUID
+		related_table:		COMPDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'COMPDATA'
+			COMPDATA		AREAA		Area
+			COMPDATA		AREAP		% Area
+			COMPDATA		VEGETATION_TYPE		Vegetation Type
+			COMPDATA		LUSE		Theme
+			COMPDATA		HABT_CODE		Primary Attribute
+			COMPDATA		PRIMARY_QUALIFIER		Primary Qualifier
+			COMPDATA		SPECIES		Species
+			COMPDATA		ROAD_VERGE_A		Road Verge A
+			COMPDATA		ROAD_VERGE_B		Road Verge B
+			COMPDATA		SPECIES_COVER		Species Cover
+			COMPDATA		PHYSIOGRAPHY_COVER		Phys. Cover
+			COMPDATA		MODAL_DBH		Modal DBH
+			COMPDATA		STRUCTURE_USE		Use
+			COMPDATA		CONDITION		Condition
+			COMPDATA		SWARD_COVER		Sward <7cm
+			COMPDATA		SWARD_HEIGHT		Sward Height
+			COMPDATA		SWARD_VARIATION		Variation in sward height
+			COMPDATA		TUSSOCKINESS		Tussockiness
+	#
+	dataset:		LINEARDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'LINEARDATA'
+		related_table:		EVENTDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'EVENTDATA'
+			EVENTDATA		HEIGHT		Height
+			EVENTDATA		CONDITION		Condition
+			EVENTDATA		WIDTH		Width
+			EVENTDATA		BASE_HEIGHT		Base Height
+			EVENTDATA		MODAL_DBH		Modal DBH
+			EVENTDATA		SPECIES_COMPOSITION		Species Comp.
+			EVENTDATA		HISTORIC_MANAGEMENT		Historic Man.
+			EVENTDATA		EVIDENCE_MANAGEMENT		Evidence Man.
+			EVENTDATA		STAKED_TREES		Staked Trees
+			EVENTDATA		TREE_PROTECTORS		Tree Protect.
+			EVENTDATA		LINE_STUMPS		Line Stumps
+			EVENTDATA		VERTICAL_GAPPINESS		Vertical Gap
+			EVENTDATA		MARGIN_WIDTH_LEFT		Margin Left
+			EVENTDATA		MARGIN_WIDTH_RIGHT		Margin Right
+			EVENTDATA		VERGE_WIDTH_LEFT		Verge Left
+			EVENTDATA		VERGE_WIDTH_RIGHT		Verge Right
+			EVENTDATA		VISIT_STATUS		Visit Status
+			EVENTDATA		REASON_FOR_CHANGE		Reason for Change
+			EVENTDATA		EVENT_FROM		Event From
+			EVENTDATA		EVENT_TO		Event To
+			EVENTDATA		LUSE		Theme
+			EVENTDATA		HABT_CODE		Primary Attribute
+		related_table:		SEVENTDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'SEVENTDATA'
+			SEVENTDATA		VEGETATION_TYPE		Vegetation Type
+			SEVENTDATA		PROPORTION		Proportion
+			SEVENTDATA		SPECIES		Species
+	#
+	dataset:		POINTDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'POINTDATA'
+			POINTDATA		VISIT_STATUS		Visit status
+			POINTDATA		REASON_FOR_CHANGE		Reason for Change
+			POINTDATA		MAPCODE_AG		AG Mapcode
+			POINTDATA		MAPCODE_FO		FO Mapcode
+			POINTDATA		MAPCODE_PH		PH Mapcode
+			POINTDATA		MAPCODE_ST		ST Mapcode
+			POINTDATA		MAPCODE_HA		HA Mapcode
+			POINTDATA		ORIGINAL_ID		FUID
+		related_table:		PCOMPDATA
+		search_cursor_fields:		['TABLENAME', 'ITEMNAME', 'DESCRIPTION']
+		where_clause:		TABLENAME = 'PCOMPDATA'
+			PCOMPDATA		LUSE		Theme
+			PCOMPDATA		HABT_CODE		Primary Attribute
+			PCOMPDATA		BUFFER		Buffer zone
+			PCOMPDATA		VEGETATION_TYPE		Vegetation type
+			PCOMPDATA		SPECIES		Species
+			PCOMPDATA		PROPORTION		Proportion
+			PCOMPDATA		MODAL_DBH		Modal DBH
+			PCOMPDATA		VETERAN_TREE_TYPE		Veteran Tree type
+			PCOMPDATA		EPIPHYTE_COVER		Epiphytic species cover
+			PCOMPDATA		IVY_COVER		Ivy cover
+			PCOMPDATA		CANOPY_LIVE		% canopy live
+			PCOMPDATA		TREE_DEAD		Tree dead
+			PCOMPDATA		MISSING_LIMBS		Missing limbs
+			PCOMPDATA		DEAD_WOOD		Dead wood attached
+			PCOMPDATA		DEAD_MISSING_BARK		Dead, loose, missing bark
+			PCOMPDATA		LIGHTENING_STRIKES		Tears, scars, lightening strikes
+			PCOMPDATA		HOLLOW_TRUNK		Hollow trunk or major rot sites
+			PCOMPDATA		USE		Use
+			PCOMPDATA		CONDITION		Condition
+			PCOMPDATA		DISEASE_SIGNS		Signs of disease
+			PCOMPDATA		HABITAT_BOXES		Habitat boxes
+	#
+	OrderedDict([('BLKDATA', {'BLK': 'CS Square'}), ('SCPTDATA', {'MAPCODE_FO': 'FO Mapcode', 'MAPCODE_ST': 'ST Mapcode', 'ORIGINAL_ID': 'FUID', 'BH98_ACCURACY': 'BH Accuracy(98)', 'MAPCODE_PH': 'PH Mapcode', 'BROAD_HABITAT': 'Broad Habitat', 'REASON_FOR_CHANGE': 'Reason for Change', 'MAPCODE_AG': 'AG Mapcode', 'VISIT_STATUS': 'Visit Status', 'MAPCODE_HA': 'HA Mapcode'}), ('COMPDATA', {'LUSE': 'Theme', 'ROAD_VERGE_A': 'Road Verge A', 'TUSSOCKINESS': 'Tussockiness', 'MODAL_DBH': 'Modal DBH', 'ROAD_VERGE_B': 'Road Verge B', 'SPECIES_COVER': 'Species Cover', 'SWARD_VARIATION': 'Variation in sward height', 'AREAP': '% Area', 'SPECIES': 'Species', 'PHYSIOGRAPHY_COVER': 'Phys. Cover', 'VEGETATION_TYPE': 'Vegetation Type', 'SWARD_COVER': 'Sward <7cm', 'SWARD_HEIGHT': 'Sward Height', 'AREAA': 'Area', 'CONDITION': 'Condition', 'PRIMARY_QUALIFIER': 'Primary Qualifier', 'STRUCTURE_USE': 'Use', 'HABT_CODE': 'Primary Attribute'}), ('LINEARDATA', {}), ('EVENTDATA', {'HEIGHT': 'Height', 'MODAL_DBH': 'Modal DBH', 'HABT_CODE': 'Primary Attribute', 'LUSE': 'Theme', 'BASE_HEIGHT': 'Base Height', 'CONDITION': 'Condition', 'VERTICAL_GAPPINESS': 'Vertical Gap', 'EVENT_TO': 'Event To', 'EVIDENCE_MANAGEMENT': 'Evidence Man.', 'REASON_FOR_CHANGE': 'Reason for Change', 'VISIT_STATUS': 'Visit Status', 'VERGE_WIDTH_RIGHT': 'Verge Right', 'HISTORIC_MANAGEMENT': 'Historic Man.', 'VERGE_WIDTH_LEFT': 'Verge Left', 'LINE_STUMPS': 'Line Stumps', 'STAKED_TREES': 'Staked Trees', 'MARGIN_WIDTH_RIGHT': 'Margin Right', 'SPECIES_COMPOSITION': 'Species Comp.', 'TREE_PROTECTORS': 'Tree Protect.', 'MARGIN_WIDTH_LEFT': 'Margin Left', 'WIDTH': 'Width', 'EVENT_FROM': 'Event From'}), ('SEVENTDATA', {'SPECIES': 'Species', 'VEGETATION_TYPE': 'Vegetation Type', 'PROPORTION': 'Proportion'}), ('POINTDATA', {'MAPCODE_FO': 'FO Mapcode', 'MAPCODE_ST': 'ST Mapcode', 'ORIGINAL_ID': 'FUID', 'MAPCODE_PH': 'PH Mapcode', 'MAPCODE_HA': 'HA Mapcode', 'MAPCODE_AG': 'AG Mapcode', 'VISIT_STATUS': 'Visit status', 'REASON_FOR_CHANGE': 'Reason for Change'}), ('PCOMPDATA', {'LUSE': 'Theme', 'SPECIES': 'Species', 'BUFFER': 'Buffer zone', 'MODAL_DBH': 'Modal DBH', 'USE': 'Use', 'DEAD_WOOD': 'Dead wood attached', 'MISSING_LIMBS': 'Missing limbs', 'DISEASE_SIGNS': 'Signs of disease', 'HOLLOW_TRUNK': 'Hollow trunk or major rot sites', 'LIGHTENING_STRIKES': 'Tears, scars, lightening strikes', 'PROPORTION': 'Proportion', 'CONDITION': 'Condition', 'CANOPY_LIVE': '% canopy live', 'HABITAT_BOXES': 'Habitat boxes', 'TREE_DEAD': 'Tree dead', 'DEAD_MISSING_BARK': 'Dead, loose, missing bark', 'VEGETATION_TYPE': 'Vegetation type', 'IVY_COVER': 'Ivy cover', 'HABT_CODE': 'Primary Attribute', 'VETERAN_TREE_TYPE': 'Veteran Tree type', 'EPIPHYTE_COVER': 'Epiphytic species cover'})])
+	#
+	field_alias_dictionary['BLKDATA']:
+	{'BLK': 'CS Square'}
+	field_alias_dictionary['SCPTDATA']:
+	{'MAPCODE_FO': 'FO Mapcode', 'MAPCODE_ST': 'ST Mapcode', 'ORIGINAL_ID': 'FUID', 'BH98_ACCURACY': 'BH Accuracy(98)', 'MAPCODE_PH': 'PH Mapcode', 'BROAD_HABITAT': 'Broad Habitat', 'REASON_FOR_CHANGE': 'Reason for Change', 'MAPCODE_AG': 'AG Mapcode', 'VISIT_STATUS': 'Visit Status', 'MAPCODE_HA': 'HA Mapcode'}
+	field_alias_dictionary['COMPDATA']:
+	{'LUSE': 'Theme', 'ROAD_VERGE_A': 'Road Verge A', 'TUSSOCKINESS': 'Tussockiness', 'MODAL_DBH': 'Modal DBH', 'ROAD_VERGE_B': 'Road Verge B', 'SPECIES_COVER': 'Species Cover', 'SWARD_VARIATION': 'Variation in sward height', 'AREAP': '% Area', 'SPECIES': 'Species', 'PHYSIOGRAPHY_COVER': 'Phys. Cover', 'VEGETATION_TYPE': 'Vegetation Type', 'SWARD_COVER': 'Sward <7cm', 'SWARD_HEIGHT': 'Sward Height', 'AREAA': 'Area', 'CONDITION': 'Condition', 'PRIMARY_QUALIFIER': 'Primary Qualifier', 'STRUCTURE_USE': 'Use', 'HABT_CODE': 'Primary Attribute'}
+	field_alias_dictionary['POINTDATA']:
+	{'MAPCODE_FO': 'FO Mapcode', 'MAPCODE_ST': 'ST Mapcode', 'ORIGINAL_ID': 'FUID', 'MAPCODE_PH': 'PH Mapcode', 'MAPCODE_HA': 'HA Mapcode', 'MAPCODE_AG': 'AG Mapcode', 'VISIT_STATUS': 'Visit status', 'REASON_FOR_CHANGE': 'Reason for Change'}
+	field_alias_dictionary['PCOMPDATA']:
+	{'LUSE': 'Theme', 'SPECIES': 'Species', 'BUFFER': 'Buffer zone', 'MODAL_DBH': 'Modal DBH', 'USE': 'Use', 'DEAD_WOOD': 'Dead wood attached', 'MISSING_LIMBS': 'Missing limbs', 'DISEASE_SIGNS': 'Signs of disease', 'HOLLOW_TRUNK': 'Hollow trunk or major rot sites', 'LIGHTENING_STRIKES': 'Tears, scars, lightening strikes', 'PROPORTION': 'Proportion', 'CONDITION': 'Condition', 'CANOPY_LIVE': '% canopy live', 'HABITAT_BOXES': 'Habitat boxes', 'TREE_DEAD': 'Tree dead', 'DEAD_MISSING_BARK': 'Dead, loose, missing bark', 'VEGETATION_TYPE': 'Vegetation type', 'IVY_COVER': 'Ivy cover', 'HABT_CODE': 'Primary Attribute', 'VETERAN_TREE_TYPE': 'Veteran Tree type', 'EPIPHYTE_COVER': 'Epiphytic species cover'}
+	field_alias_dictionary['LINEARDATA']:
+	{}
+	field_alias_dictionary['EVENTDATA']:
+	{'HEIGHT': 'Height', 'MODAL_DBH': 'Modal DBH', 'HABT_CODE': 'Primary Attribute', 'LUSE': 'Theme', 'BASE_HEIGHT': 'Base Height', 'CONDITION': 'Condition', 'VERTICAL_GAPPINESS': 'Vertical Gap', 'EVENT_TO': 'Event To', 'EVIDENCE_MANAGEMENT': 'Evidence Man.', 'REASON_FOR_CHANGE': 'Reason for Change', 'VISIT_STATUS': 'Visit Status', 'VERGE_WIDTH_RIGHT': 'Verge Right', 'HISTORIC_MANAGEMENT': 'Historic Man.', 'VERGE_WIDTH_LEFT': 'Verge Left', 'LINE_STUMPS': 'Line Stumps', 'STAKED_TREES': 'Staked Trees', 'MARGIN_WIDTH_RIGHT': 'Margin Right', 'SPECIES_COMPOSITION': 'Species Comp.', 'TREE_PROTECTORS': 'Tree Protect.', 'MARGIN_WIDTH_LEFT': 'Margin Left', 'WIDTH': 'Width', 'EVENT_FROM': 'Event From'}
+	field_alias_dictionary['SEVENTDATA']:
+	{'SPECIES': 'Species', 'VEGETATION_TYPE': 'Vegetation Type', 'PROPORTION': 'Proportion'}
+	#
+	CS Square
+	Broad Habitat
+	Road Verge A
+	Visit status
+	Primary Attribute
+	None
+	None
+	Vegetation Type
+	None
+	#
+Created dictionary to hold field aliases.
+
+
+bng_100km:		C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB CEHCORP CORPADMIN.sde\CORPADMIN.BritishNationalGrid_100km
+
+
+Creating combined file geodatabase...
+	fgdb:		\E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928.gdb
+Created combined file geodatabase.
+
+
+Creating temporary SDE file geodatabases...
+	CS_ORIGINAL
+		temp_fgdb:		E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928-cs_original.gdb
+	CS_RESTORED
+		temp_fgdb:		E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928-cs_restored.gdb
+	WGEM
+		temp_fgdb:		E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928-wgem.gdb
+Created temporary SDE file geodatabases.
+
+
+Copying datasets...
+	CS_ORIGINAL
+		arcpy.env.workspace:		E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928-cs_original.gdb
+		POINTDATA
+			dataset_in:			C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\POINTDATA
+			dataType:			FeatureClass
+			shapeType:			Point
+			dataset_out:		POINTDATA_CS_ORIGINAL
+			Deleting non-CS2007 fields from out feature class POINTDATA_CS_ORIGINAL...
+				drop_fields:		['MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'CREATE_ID', 'CPTDATA_ID']
+			Deleted non-CS2007 fields from out feature class POINTDATA_CS_ORIGINAL.
+			Appending rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\POINTDATA to out feature class POINTDATA_CS_ORIGINAL...
+			Appended rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\POINTDATA to out feature class POINTDATA_CS_ORIGINAL...
+			Count:		26208
+			Setting VISIT_STATUS to <Null> in POINTDATA_CS_ORIGINAL feature class...
+			Set VISIT_STATUS to <Null> in POINTDATA_CS_ORIGINAL feature class.
+			Setting REASON_FOR_CHANGE to <Null> in POINTDATA_CS_ORIGINAL feature class...
+			Set REASON_FOR_CHANGE to <Null> in POINTDATA_CS_ORIGINAL feature class.
+			Adding additional fields...
+				Adding Point_Proximity field to POINTDATA feature class...
+				Added Point_Proximity field to POINTDATA feature class.
+				Adding Editor and Date of Edit fields to POINTDATA_CS_ORIGINAL...
+				Added Editor and Date of Edit fields to POINTDATA_CS_ORIGINAL.
+			Added additional fields.
+			Adding field aliases...
+				ORIGINAL_ID is a type of String with a length of 30
+				field_alias:		FUID
+				POINTDATA_ID is a type of Integer with a length of 4
+				VISIT_STATUS is a type of SmallInteger with a length of 2
+				field_alias:		Visit status
+				REASON_FOR_CHANGE is a type of SmallInteger with a length of 2
+				field_alias:		Reason for Change
+			Added field aliases.
+		PCOMPDATA
+			dataset_in:			C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\PCOMPDATA
+			dataType:			Table
+			shapeType:			None
+			dataset_out:		PCOMPDATA_CS_ORIGINAL
+			Deleting non-CS2007 fields from out table PCOMPDATA_CS_ORIGINAL...
+				drop_fields:		['CREATE_ID']
+			Deleted non-CS2007 fields from out table PCOMPDATA_CS_ORIGINAL.
+			Appending rows from in table C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\PCOMPDATA to out table PCOMPDATA_CS_ORIGINAL...
+			Appended rows from in table C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN CSADMIN.sde\PCOMPDATA to out table PCOMPDATA_CS_ORIGINAL...
+			Count:		28235
+			Adding additional fields...
+				Adding CONDITION field to PCOMPDATA related table...
+				Added CONDITION field to PCOMPDATA feature class.
+				Adding DISEASE_SIGNS field to PCOMPDATA related table...
+				Added DISEASE_SIGNS field to PCOMPDATA feature class.
+				Adding HABITAT_BOXES field to PCOMPDATA related table...
+				Added HABITAT_BOXES field to PCOMPDATA feature class.
+				Adding Editor and Date of Edit fields to PCOMPDATA_CS_ORIGINAL...
+				Added Editor and Date of Edit fields to PCOMPDATA_CS_ORIGINAL.
+			Added additional fields.
+			Adding field aliases...
+				LUSE is a type of String with a length of 3
+				field_alias:		Theme
+				HABT_CODE is a type of String with a length of 20
+				field_alias:		Primary Attribute
+				USE is a type of SmallInteger with a length of 2
+				field_alias:		Use
+				BUFFER is a type of String with a length of 1
+				field_alias:		Buffer zone
+				TREE_DEAD is a type of String with a length of 1
+				field_alias:		Tree dead
+				MISSING_LIMBS is a type of String with a length of 1
+				field_alias:		Missing limbs
+				DEAD_WOOD is a type of String with a length of 1
+				field_alias:		Dead wood attached
+				DEAD_MISSING_BARK is a type of String with a length of 1
+				field_alias:		Dead, loose, missing bark
+				LIGHTENING_STRIKES is a type of String with a length of 1
+				field_alias:		Tears, scars, lightening strikes
+				HOLLOW_TRUNK is a type of String with a length of 1
+				field_alias:		Hollow trunk or major rot sites
+				SPECIES is a type of String with a length of 50
+				field_alias:		Species
+				PCOMPDATA_ID is a type of Integer with a length of 4
+				POINTDATA_ID is a type of Integer with a length of 4
+				VEGETATION_TYPE is a type of SmallInteger with a length of 2
+				field_alias:		Vegetation type
+				PROPORTION is a type of SmallInteger with a length of 2
+				field_alias:		Proportion
+				MODAL_DBH is a type of SmallInteger with a length of 2
+				field_alias:		Modal DBH
+				VETERAN_TREE_TYPE is a type of SmallInteger with a length of 2
+				field_alias:		Veteran Tree type
+				EPIPHYTE_COVER is a type of SmallInteger with a length of 2
+				field_alias:		Epiphytic species cover
+				IVY_COVER is a type of SmallInteger with a length of 2
+				field_alias:		Ivy cover
+				CANOPY_LIVE is a type of SmallInteger with a length of 2
+				field_alias:		% canopy live
+			Added field aliases.
+	CS_RESTORED
+		arcpy.env.workspace:		E:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20160928-cs_restored.gdb
+		BLKDATA
+			dataset_in:			C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\BLKDATA
+			dataType:			FeatureClass
+			shapeType:			Polygon
+			dataset_out:		BLKDATA_CS_RESTORED
+			Deleting non-CS2007 fields from out feature class BLKDATA_CS_RESTORED...
+				drop_fields:		['EXTENT', 'FOREST', 'CREATE_ID']
+			Deleted non-CS2007 fields from out feature class BLKDATA_CS_RESTORED.
+			Appending rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\BLKDATA to out feature class BLKDATA_CS_RESTORED...
+			Appended rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\BLKDATA to out feature class BLKDATA_CS_RESTORED...
+			Count:		591
+			Adding additional fields...
+				Adding Editor and Date of Edit fields to BLKDATA_CS_RESTORED...
+				Added Editor and Date of Edit fields to BLKDATA_CS_RESTORED.
+			Added additional fields.
+			Adding field aliases...
+				BLK is a type of SmallInteger with a length of 2
+				field_alias:		CS Square
+				BLKDATA_ID is a type of Integer with a length of 4
+				BLKDATA_GUID is a type of String with a length of 38
+				SHAPE_Length is a type of Double with a length of 8
+				SHAPE_Area is a type of Double with a length of 8
+			Added field aliases.
+		SCPTDATA
+			dataset_in:			C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\SCPTDATA
+			dataType:			FeatureClass
+			shapeType:			Polygon
+			dataset_out:		SCPTDATA_CS_RESTORED
+			Deleting non-CS2007 fields from out feature class SCPTDATA_CS_RESTORED...
+				drop_fields:		['SCPT', 'FORP', 'COVA', 'COFC', 'HABT', 'AMAW', 'SOIL', 'TCON', 'TRGH', 'TSLP', 'CULT', 'GRAZED_SWARD', 'CANOPY_FRAGMENTATION', 'MAPCODE_AG', 'MAPCODE_FO', 'MAPCODE_PH', 'MAPCODE_ST', 'MAPCODE_HA', 'CPMT', 'BLK', 'FOREST', 'ALTD', 'THIN_STATUS', 'INVALID_THIN', 'CPTDATA_ID', 'THINCOUPE_ID', 'CREATE_ID', 'CANOPY_COVERP', 'NATIVE_SPIS_IN_CANOPYP', 'SEMI_NATURALP', 'PLANTEDP', 'POACHED_GROUND', 'SPATIAL_ERROR']
+			Deleted non-CS2007 fields from out feature class SCPTDATA_CS_RESTORED.
+			Appending rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\SCPTDATA to out feature class SCPTDATA_CS_RESTORED...
+			Appended rows from in feature class C:\Users\SMW\AppData\Roaming\ESRI\Desktop10.1\ArcCatalog\Connection to LADB FEGEN2 CS2007_ADMIN.sde\CS2007_ADMIN.ForesterData\SCPTDATA to out feature class SCPTDATA_CS_RESTORED...
+			Count:		63865
+			Setting VISIT_STATUS to <Null> in SCPTDATA_CS_RESTORED feature class...
+			Set VISIT_STATUS to <Null> in SCPTDATA_CS_RESTORED feature class.
+			Setting REASON_FOR_CHANGE to <Null> in SCPTDATA_CS_RESTORED feature class...
+			Set REASON_FOR_CHANGE to <Null> in SCPTDATA_CS_RESTORED feature class.
+			Adding additional fields...
+				Adding Polygon_Area field to SCPTDATA feature class...
+				Added Polygon_Area field to SCPTDATA feature class.
+					Calculating Polygon_Area...
+					Calculated Polygon_Area.
+				Adding Editor and Date of Edit fields to SCPTDATA_CS_RESTORED...
+				Added Editor and Date of Edit fields to SCPTDATA_CS_RESTORED.
+			Added additional fields.
+			Adding field aliases...
+				ORIGINAL_ID is a type of String with a length of 30
+				field_alias:		FUID
