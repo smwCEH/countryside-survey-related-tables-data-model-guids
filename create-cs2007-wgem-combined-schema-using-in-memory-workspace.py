@@ -340,7 +340,7 @@ if copy_datasets:
         print('\t{0}'.format(sde))
         temp_fgdb = os.path.join(os.path.dirname(combined_fgdb),
                                  os.path.splitext(os.path.basename(combined_fgdb))[0] + '-' + str(sde).lower() + '.gdb')
-        # # Set arcpy.env.workspace to temporary SDE file geodatabase
+        ## Set arcpy.env.workspace to temporary SDE file geodatabase
         # arcpy.env.workspace = temp_fgdb
         # Set arcpy.env.workspace to the in_memory workspace
         arcpy.env.workspace = 'in_memory'
@@ -377,7 +377,8 @@ if copy_datasets:
                 shapeType = None
             print('\t\t\tshapeType:\t\t\t{0}'.format(shapeType))
             # Define out dataset
-            dataset_out = 'in_memory' + '\\' + dataset + '_' + sde
+            dataset_out = os.path.join(arcpy.env.workspace,
+                                       dataset + '_' + sde)
             print('\t\t\tdataset_out:\t\t{0}'.format(dataset_out))
             # Delete out dataset if it already exists
             if arcpy.Exists(dataset=dataset_out):
@@ -420,7 +421,7 @@ if copy_datasets:
             result = arcpy.GetCount_management(dataset_out)
             count = int(result.getOutput(0))
             print('\t\t\tCount:\t\t{0}'.format(count))
-            # Delete selected squares from the CS_RESTORED feature classes or non-Welsh data from the WGEM feature classes
+            # Delete non-Summer 2016 Pilot squares from the CS_RESTORED feature classes or non-Welsh data from the WGEM feature classes
             if sde == 'CS_RESTORED':
                 print('\t\t\tRemoving non-Summer 2016 Pilot data from feature class...')
                 intersect_fc = cs_restored_blkdata
@@ -439,49 +440,42 @@ if copy_datasets:
             print('\t\t\t\tintersect_fc:\t\t{0}'.format(intersect_fc))
             print('\t\t\t\tintersect_layer:\t{0}'.format(intersect_layer))
             print('\t\t\t\twhere_clause:\t\t{0}'.format(where_clause))
-            # result = arcpy.GetCount_management(in_rows=dataset_out)
-            # count = int(result.getOutput(0))
-            # print('\t\t\t\tCount:\t\t{0}'.format(count))
-            arcpy.MakeFeatureLayer_management(in_features=intersect_fc,
-                                              out_layer=intersect_layer,
-                                              where_clause=where_clause)
-            result = arcpy.GetCount_management(in_rows=intersect_layer)
-            count = int(result.getOutput(0))
-            print('\t\t\t\tCount:\t\t\t\t{0}'.format(count))
-            featurelayer = 'featurelayer'
-            if arcpy.Exists(featurelayer):
-                print('Deleting featurelayer...')
-                arcpy.Delete_management(featurelayer)
-                print('Deleted featurelayer.')
-            print(featurelayer)
-            print('\t{0}'.format(arcpy.Exists(featurelayer)))
-            print(dataset_out)
-            print('\t{0}'.format(arcpy.Exists(dataset_out)))
-            arcpy.MakeFeatureLayer_management(in_features=dataset_out,
-                                              out_layer=featurelayer)
-            arcpy.SelectLayerByLocation_management(in_layer=featurelayer,
-                                                   overlap_type='INTERSECT',
-                                                   select_features=intersect_layer,
-                                                   selection_type='NEW_SELECTION',
-                                                   invert_spatial_relationship='INVERT')
-            result = arcpy.GetCount_management(in_rows=featurelayer)
-            count = int(result.getOutput(0))
-            print('\t\t\t\tCount:\t\t{0}'.format(count))
-            # arcpy.DeleteFeatures_management(in_features=featurelayer)
-            # arcpy.SelectLayerByAttribute_management(in_layer_or_view=featurelayer,
-            #                                         selection_type='CLEAR_SELECTION')
-            # result = arcpy.GetCount_management(in_rows=dataset_out)
-            # count = int(result.getOutput(0))
-            # print('\t\t\t\tCount:\t\t{0}'.format(count))
-            # # Recalculate the feature class extent
-            # print('\t\t\t\tRe-calculating the extent of feature class {0}...'.format(dataset_out))
-            # arcpy.RecalculateFeatureClassExtent_management(in_features=dataset_out)
-            # print('\t\t\t\tRe-calculated the extent of feature class {0}.'.format(dataset_out))
-            # print('\t\t\tRemoved non-Welsh data from feature class.')
-            # Delete non-Welsh data from the WGEM tables
+            if dataset in ('BLKDATA', 'SCPTDATA', 'LINEARDATA', 'POINTDATA'):
+                # result = arcpy.GetCount_management(in_rows=dataset_out)
+                # count = int(result.getOutput(0))
+                # print('\t\t\t\tCount:\t\t{0}'.format(count))
+                arcpy.MakeFeatureLayer_management(in_features=intersect_fc,
+                                                  out_layer=intersect_layer,
+                                                  where_clause=where_clause)
+                result = arcpy.GetCount_management(in_rows=intersect_layer)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t\t\t{0}'.format(count))
+                featurelayer = 'featurelayer'
+                if arcpy.Exists(featurelayer):
+                    arcpy.Delete_management(featurelayer)
+                arcpy.MakeFeatureLayer_management(in_features=dataset_out,
+                                                  out_layer=featurelayer)
+                arcpy.SelectLayerByLocation_management(in_layer=featurelayer,
+                                                       overlap_type='INTERSECT',
+                                                       select_features=intersect_layer,
+                                                       selection_type='NEW_SELECTION',
+                                                       invert_spatial_relationship='INVERT')
+                result = arcpy.GetCount_management(in_rows=featurelayer)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                arcpy.DeleteFeatures_management(in_features=featurelayer)
+                arcpy.SelectLayerByAttribute_management(in_layer_or_view=featurelayer,
+                                                        selection_type='CLEAR_SELECTION')
+                result = arcpy.GetCount_management(in_rows=dataset_out)
+                count = int(result.getOutput(0))
+                print('\t\t\t\tCount:\t\t{0}'.format(count))
+                # Recalculate the feature class extent
+                print('\t\t\t\tRe-calculating the extent of feature class {0}...'.format(dataset_out))
+                arcpy.RecalculateFeatureClassExtent_management(in_features=dataset_out)
+                print('\t\t\t\tRe-calculated the extent of feature class {0}.'.format(dataset_out))
+                print('\t\t\tRemoved non-Welsh data from feature class.')
 
-
-
+            # Delete non-Summer 2016 Pilot squares from the CS_RESTORED tables or non-Welsh data from the WGEM tables
             # if sde == 'WGEM' and dataset in ('COMPDATA', 'EVENTDATA', 'SEVENTDATA', 'PCOMPDATA'):
             #     print('\t\t\tRemoving non-Welsh data from table...')
             #     result = arcpy.GetCount_management(in_rows=dataset_out)
