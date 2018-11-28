@@ -71,22 +71,78 @@ old_blocks = os.path.join(renamed_fgdb, 'BLKDATA')
 new_blocks = os.path.join(renamed_fgdb, 'SURVEYSQUARES')
 arcpy.Rename_management(in_data=old_blocks,
                         out_data=new_blocks)
-
-
-print('\n\nRenaming blocks GUID...')
+print('Renaming blocks GUID...')
 arcpy.AlterField_management(in_table=new_blocks,
                             field='BLKDATA_GUID',
                             new_field_name='SURVEYSQUARES_GUID',
                             new_field_alias='SURVEYSQUARES_GUID')
 
 
-# print('\n\nRenaming areas...')
-# old_areas = os.path.join(renamed_fgdb, 'SCPTDATA')
-# new_areas = os.path.join(renamed_fgdb, 'AREAS')
-# arcpy.Rename_management(in_data=old_areas,
-#                         out_data=new_areas)
+old_areas = os.path.join(renamed_fgdb, 'SCPTDATA')
+new_areas = os.path.join(renamed_fgdb, 'AREAS')
+old_areas_data = os.path.join(renamed_fgdb, 'COMPDATA')
+new_areas_data = os.path.join(renamed_fgdb, 'AREASDATA')
+print('\n\nDeleting areas to areas data relationship class...')
+arcpy.Delete_management(in_data='{0}_{1}'.format(os.path.basename(old_areas),
+                                                 os.path.basename(old_areas_data)))
+print('Renaming areas...')
+arcpy.Rename_management(in_data=old_areas,
+                        out_data=new_areas)
+print('Renaming areas GUID...')
+# arcpy.AlterField_management(in_table=new_areas,
+#                             field='SCPTDATA_GUID',
+#                             new_field_name='AREAS_GUID',
+#                             new_field_alias='AREAS_GUID',
+#                             field_type='',
+#                             field_length='',
+#                             field_is_nullable='',
+#                             clear_field_alias='DO_NOT_CLEAR')
+arcpy.AddField_management(in_table=new_areas,
+                          field_name='AREAS_GUID',
+                          field_type='GUID',
+                          field_is_nullable='NULLABLE',
+                          field_is_required='REQUIRED')
+arcpy.CalculateField_management(in_table=new_areas,
+                                field='AREAS_GUID',
+                                expression='SCPTDATA',
+                                expression_type='PYTHON3')
+arcpy.DeleteField_management(in_table=new_areas,
+                             drop_field='SCPT_GUID')
 
 
+print('\n\nRenaming areas related table...')
+old_areas_data = os.path.join(renamed_fgdb, 'COMPDATA')
+new_areas_data = os.path.join(renamed_fgdb, 'AREASDATA')
+arcpy.Rename_management(in_data=old_areas_data,
+                        out_data=new_areas_data)
+print('Renaming areas data GUID...')
+arcpy.AlterField_management(in_table=new_areas_data,
+                            field='SCPTDATA_GUID',
+                            new_field_name='AREAS_GUID',
+                            new_field_alias='AREAS_GUID')
+print('Renaming areas data GUID...')
+arcpy.AlterField_management(in_table=new_areas_data,
+                            field='COMPDATA_GUID',
+                            new_field_name='AREASDATA_GUID',
+                            new_field_alias='AREASDATA_GUID')
+print('Deleting areas to areas data relationship class...')
+arcpy.Delete_management(in_data='{0}_{1}'.format(os.path.basename(old_areas),
+                                                 os.path.basename(old_areas_data)))
+print('Re-creating areas to areas data relationship class...')
+arcpy.CreateRelationshipClass_management(origin_table=new_areas,
+                                         destination_table=new_areas_data,
+                                         out_relationship_class='{0}_{1}'.format(os.path.basename(new_areas),
+                                                                                 os.path.basename(new_areas_data)),
+                                         relationship_type='COMPOSITE',
+                                         forward_label=new_areas,
+                                         backward_label=new_areas_data,
+                                         message_direction='BOTH',
+                                         cardinality='ONE_TO_MANY',
+                                         attributed='NONE',
+                                         origin_primary_key='AREAS_GUID',
+                                         origin_foreign_key='',
+                                         destination_primary_key='AREAS_GUID',
+                                         destination_foreign_key='')
 
 
 
