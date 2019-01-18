@@ -1,0 +1,8 @@
+# ArcGIS Pro project files
+*.aprx
+
+# Text files
+*.txt
+
+# smw Python script output files
+*.output
