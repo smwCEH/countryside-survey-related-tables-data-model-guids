@@ -1,5 +1,6 @@
 # ArcGIS Pro project files
 *.aprx
+*.tbx
 
 # Text files
 *.txt
