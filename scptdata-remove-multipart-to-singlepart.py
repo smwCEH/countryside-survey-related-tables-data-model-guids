@@ -120,7 +120,8 @@ print('\n\nduplicate_field:\t{0}'.format(duplicate_field))
 # print('thing1 in dummy_guid_list:\t{0}'.format(thing1 in dummy_guid_list))
 
 
-data_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\multipart-scptdata-20190109.gdb'
+# data_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\multipart-scptdata-20190109.gdb'
+data_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20181129-copy-for-multipart-to-singlepart.gdb'
 print('\n\ndata_workspace:\t{0}'.format(data_workspace))
 
 
@@ -157,7 +158,8 @@ print('\n\narcpy.env.workspace:\t{0}'.format(arcpy.env.workspace))
 # print('\t{0:25}:\t{1}'.format('Attachment Relationship', desc.isAttachmentRelationship))
 
 
-scratch_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\multipart-scptdata-scratch-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+# scratch_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\multipart-scptdata-scratch-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
+scratch_workspace = r'G:\CountrysideSurvey\cs2007-wgem-combined-schema\combined-schema-20181129-copy-converted-to-singlepart-{0}.gdb'.format(datetime.datetime.now().strftime('%Y%m%d'))
 print('\n\nscratch_workspace:\t{0}'.format(scratch_workspace))
 
 
@@ -196,6 +198,23 @@ if copy_datasets:
 		arcpy.Copy_management(in_data=dataset,
 		                      out_data=out_dataset)
 	print('Copied datasets to scratch workspace.')
+
+
+copy_workspace = True
+
+
+if copy_workspace:
+	if arcpy.Exists(dataset=scratch_workspace):
+		print('\tDeleting scratch_workspace...')
+		arcpy.Delete_management(in_data=scratch_workspace,
+		                        data_type='')
+		print('\tDeleted scratch_workspace.')
+	print('\tCopying data_workspace to scratch_workspace...')
+	arcpy.Copy_management(in_data=data_workspace,
+	                      out_data=scratch_workspace,
+	                      data_type='',
+	                      associated_data='')
+	print('\tCopied data_workspace to scratch_workspace.')
 
 
 arcpy.env.workspace = scratch_workspace
