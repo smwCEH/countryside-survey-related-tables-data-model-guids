@@ -67,11 +67,11 @@ old_blocks_guid = 'BLKDATA_GUID'
 new_blocks_guid = 'SURVEYSQUARES_GUID'
 
 
-old_areas = os.path.join(renamed_fgdb, 'SCPTDATA')
+old_areas = os.path.join(renamed_fgdb, 'SCPTDATA_singlepart')
 new_areas = os.path.join(renamed_fgdb, 'AREAS')
 old_areas_guid = 'SCPTDATA_GUID'
 new_areas_guid = 'AREAS_GUID'
-old_areas_data = os.path.join(renamed_fgdb, 'COMPDATA')
+old_areas_data = os.path.join(renamed_fgdb, 'COMPDATA_singlepart')
 new_areas_data = os.path.join(renamed_fgdb, 'AREASDATA')
 old_areas_data_guid = 'COMPDATA_GUID'
 new_areas_data_guid = 'AREASDATA_GUID'
